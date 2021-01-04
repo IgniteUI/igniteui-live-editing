@@ -1,0 +1,33 @@
+{
+  "name": "igniteui-live-editing",
+  "version": "1.0.0",
+  "description": "This feature helps us to provide each sample as a separate application to external consumers.",
+  "main": "LiveEditingManager.js",
+  "types": "LiveEditingManager.d.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rm -rf lib && npx tsc && cp package.json ./lib",
+    "build:dev": "tsc --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IgniteUI/igniteui-live-editing.git"
+  },
+  "author": "Infragistics",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/IgniteUI/igniteui-live-editing/issues"
+  },
+  "homepage": "https://github.com/IgniteUI/igniteui-live-editing#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.12.10",
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "@babel/preset-typescript": "^7.12.7",
+    "@types/node": "^14.14.19",
+    "fs-extra": "^9.0.1",
+    "slash": "^3.0.0",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
+  }
+}
