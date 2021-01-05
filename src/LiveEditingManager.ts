@@ -14,8 +14,8 @@ export class LiveEditingManager {
     private routingPathService: TsRoutingPathService;
 
     constructor(public options: IOptions, private baseDir = process.cwd()) {
-        console.log(this.baseDir);
-        this.options.samplesDir = path.join(this.baseDir, this.options.samplesDir);
+    
+        this.options.samplesDir = path.join(this.baseDir, this.options.samplesDir + "/samples/");
         this.routingPathService = new TsRoutingPathService(this.baseDir, this.options.module.routerPath);
         this.routingPathService.generateRouting();
     }
@@ -23,10 +23,7 @@ export class LiveEditingManager {
     public async run() {
         fsExtra.removeSync(this.options.samplesDir);
         fs.mkdirSync(this.options.samplesDir);
-        return this.generate().then(() => {
-            console.log("-----------------------------------------------------");
-            console.log("Live-Editing - output folder: " + path.join(process.cwd(), this.options.samplesDir));
-        });
+        await this.generate();
     }
 
     private async generate() {
@@ -36,12 +33,18 @@ export class LiveEditingManager {
         console.log("-----------------------------------------------------");
         console.log("Live-Editing - with " + logInfo);
 
+        new SampleAssetsGenerator(this.options, this.routingPathService).generateSamplesAssets()
+        .then(console.log)
+        .then(() => this.generateMetada())
+        .then(() => {
+            console.log("-----------------------------------------------------");
+            console.log("Live-Editing - output folder: " + this.options.samplesDir);
+        })
+        .catch(e => { throw new Error(e)});
         new SharedAssetsGenerator(this.options).generateSharedAssets();
-       await new SampleAssetsGenerator(this.options, this.routingPathService).generateSamplesAssets();
-        this.generateMetada();
     }
 
-    private generateMetada(){
+    private generateMetada() {
         let metadata = new MetaData();
         fs.writeFileSync(this.options.samplesDir + "/meta.json", JSON.stringify(metadata));
     }

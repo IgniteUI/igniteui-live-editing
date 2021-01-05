@@ -35,7 +35,7 @@ export class TsRoutingPathService {
         const source = ts.createSourceFile(routePath, fs.readFileSync(sourcePath).toString(), ts.ScriptTarget.ES2015, true);
         let routing: ts.Statement;
         let name: ts.Identifier;
-        let classRoutePath: ts.StringLiteral;
+        let classRoutePath: string | ts.StringLiteral;
         let routingArray: ts.ArrayLiteralExpression;
         let properties: ts.ObjectLiteralElementLike[];
         let route: IComponentRoute | IModuleRouting;
@@ -63,9 +63,10 @@ export class TsRoutingPathService {
                 routingArray.elements.forEach((node: ts.ObjectLiteralExpression) => {
                     [...properties] = node.properties;
                     name = this.getObjectLiteralPropertyValue<ts.Identifier>(properties, 'module', ts.SyntaxKind.Identifier);
-                    classRoutePath = this.getObjectLiteralPropertyValue<ts.StringLiteral>(properties, 'path', ts.SyntaxKind.StringLiteral);
+                    
+                    classRoutePath = this.getBaseDir(name.text);
                     const componentRoutes =  this.getObjectLiteralPropertyValue<ts.PropertyAccessExpression>(properties, 'routes', ts.SyntaxKind.PropertyAccessExpression);
-                    route = { module: name.text, routes: [], path: classRoutePath.text} as IModuleRouting;
+                    route = { module: name.text, routes: [], path: classRoutePath} as IModuleRouting;
                     const moduleName = route.module;
                     const moduleRoutingIdentifier = componentRoutes.getChildren()[0].getText();
                     const moduleRoutingPath = `${this.routingImports.get(moduleRoutingIdentifier)}.ts`;
@@ -92,5 +93,9 @@ export class TsRoutingPathService {
     private getObjectLiteralPropertyValue<T extends ts.Node>(props: ts.ObjectLiteralElementLike[], propertyName: string, valueSyntaxKind: ts.SyntaxKind): T {
         return (props.find(prop => prop.name.getText() === propertyName) as unknown as T).
                 getChildren().find(n => n.kind === valueSyntaxKind && n.getText() !== propertyName) as T;
+    }
+
+    private getBaseDir(name: string){
+        return path.basename(path.dirname(this.routingImports.get(name)));
     }
 }
