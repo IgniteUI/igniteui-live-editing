@@ -45,8 +45,8 @@ export class TsImportsService {
             importSpecifiers.push(importSpecifierNode.getText());
             return;
         }
-
-        let children = node.getChildren();
+  
+        let children = node.getChildren();      
         for (let i = 0; i < children.length; i++) {
             this.getImportSpecifiers(children[i], importSpecifiers);
         }

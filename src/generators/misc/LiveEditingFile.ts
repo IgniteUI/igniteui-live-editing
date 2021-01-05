@@ -1,6 +1,6 @@
 const ASSETS_REG_EXP = new RegExp("assets/");
-type Platform = "angular" | "react" | "blazor" | "wc";
-
+export const SAMPLE_SRC_FOLDER = "src/";
+export const SAMPLE_APP_FOLDER = "src/app/";
 export class LiveEditingFile {
     public path: string;
     public content: string;
@@ -20,13 +20,4 @@ export class LiveEditingFile {
     }
 }
 
-export interface IOptions {
-    platform: Platform,
-    samplesDir: string,
-    configGeneratorPath:  string;
-    configGenerator?: typeof Object[],
-    module: {
-        routerPath:string,
-        moduleName: string
-    };
-}
+
