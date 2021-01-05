@@ -3,22 +3,19 @@
 import * as fs from "fs";
 import * as path from "path";
 import { DependencyResolver } from "./../services/DependencyResolver";
-import { Generator, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER } from "./Generator";
 
-import { IOptions, LiveEditingFile } from "./misc/LiveEditingFile";
-import { SampleDefinitionFile } from "./misc/SampleDefinitionFile";
+import { LiveEditingFile, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER } from "./misc/LiveEditingFile";
 import { TsImportsService } from "../services/TsImportsService";
-import { IConfigGenerator } from "./public/IConfigGenerator";
-import { Config } from "./public/Config";
-import { TsRoutingPathService } from "../services/TsRoutingPathService";
+import { componentPaths, appRouting } from "../services/TsRoutingPathService";
+import { IConfigGenerator, Config, ILiveEditingOptions } from "../public";
+import { SampleDefinitionFile } from "./misc/SampleDefinitionFile";
 
-const BASE_PATH = path.join(__dirname, "../../");
 const APP_MODULE_TEMPLATE_PATH = path.join(__dirname, "../templates/app.module.ts.template");
 
 const COMPONENT_STYLE_FILE_EXTENSION = "scss";
 const COMPONENT_FILE_EXTENSIONS = ["ts", "html", COMPONENT_STYLE_FILE_EXTENSION];
 
-export class SampleAssetsGenerator extends Generator {
+export class SampleAssetsGenerator {
     private _dependencyResolver: DependencyResolver;
     private _componentRoutes: Map<string, string>;
     private _generatedSamples: Map<string, string>;
@@ -28,8 +25,8 @@ export class SampleAssetsGenerator extends Generator {
     private _logsUtilitiesFiles: number;
     private _tsImportsService: TsImportsService;
 
-    constructor(options: IOptions, routingService: TsRoutingPathService) {
-        super(options, routingService);
+    constructor(private options: ILiveEditingOptions) {
+
         this._tsImportsService = new TsImportsService();
 
         this._logsEnabled = false;
@@ -49,44 +46,45 @@ export class SampleAssetsGenerator extends Generator {
         let currentFileImports = this._tsImportsService.getFileImports(this.options.configGeneratorPath);
 
         console.log("Live-Editing - generating component samples...");
-        await this.getConfigGenerators().then(m => {
-            const GENERATORS = m[Object.keys(m)[0]];
-            for (let i = 0; i < GENERATORS.length; i++) {
-                let generatorType = GENERATORS[i];
-                let generatorName = generatorType.name;
-                let generatorPath = path.join(path.join(process.cwd(), path.dirname(this.options.configGeneratorPath)),
-                    currentFileImports.get(generatorName) + ".ts");
-                let generatorImports = this._tsImportsService.getFileImports(generatorPath);
-                let generator = new GENERATORS[i]() as IConfigGenerator;
-                let generatorConfigs = generator.generateConfigs();
-    
-                const generatorCount = generatorConfigs.length;
-                const generatorInfo = generatorName.replace("ConfigGenerator", "");
-    
-                this._logsCountConfigs++;
-                for (let j = 0; j < generatorConfigs.length; j++) {
-                    this._generateSampleAssets(generatorConfigs[j], generatorImports, generator?.additionalImports);
-                }
-    
-                console.log("Live-Editing - generated " + generatorCount + " samples for " + generatorInfo);
-            }
-    
-            const fileCount = this._logsSampleFiles + this._logsUtilitiesFiles;
-            console.log("Live-Editing - generated " + fileCount + " files for " + this._logsCountConfigs + " components");
-        });
 
+        import(path.join(process.cwd(), this.options.configGeneratorPath)).
+            then(m => {
+                const GENERATORS = m[Object.keys(m)[0]];
+
+                for (let i = 0; i < GENERATORS.length; i++) {
+                    let generatorType = GENERATORS[i];
+                    let generatorName = generatorType.name;
+                    let generatorPath = path.join(path.join(process.cwd(), path.dirname(this.options.configGeneratorPath)),
+                        currentFileImports.get(generatorName) + ".ts");
+                    let generatorImports = this._tsImportsService.getFileImports(generatorPath);
+                    let generator = new GENERATORS[i]() as IConfigGenerator;
+                    let generatorConfigs = generator.generateConfigs();
+
+                    const generatorCount = generatorConfigs.length;
+                    const generatorInfo = generatorName.replace("ConfigGenerator", "");
+
+                    this._logsCountConfigs++;
+                    for (let j = 0; j < generatorConfigs.length; j++) {
+                        this._generateSampleAssets(generatorConfigs[j], generatorImports, generator?.additionalImports);
+                    }
+
+                    console.log("Live-Editing - generated " + generatorCount + " samples for " + generatorInfo);
+                }
+            });
+        const fileCount = this._logsSampleFiles + this._logsUtilitiesFiles;
+        return "Live-Editing - generated " + fileCount + " files for " + this._logsCountConfigs + " components";
     }
 
     private _generateRoutes() {
         console.log("Live-Editing - generating component routes...");
 
-        const moduleRoutes = this.getModuleRoutes();
+        const moduleRoutes = appRouting.get(this.options.module.moduleName);
         for (let i = 0; i < moduleRoutes.length; i++) {
             let moduleName = moduleRoutes[i].module;
             let modulePath = moduleRoutes[i].path;
             if (this._logsEnabled) {
-                let moduleStat =  moduleRoutes[i].routes.length + " routes";
-                let moduleInfo =  moduleName.replace("Module", " module");
+                let moduleStat = moduleRoutes[i].routes.length + " routes";
+                let moduleInfo = moduleName.replace("Module", " module");
                 console.log("Live-Editing - generated " + moduleStat + " for " + moduleInfo);
             }
             for (let j = 0; j < moduleRoutes[i].routes.length; j++) {
@@ -102,7 +100,7 @@ export class SampleAssetsGenerator extends Generator {
 
     private _generateSampleAssets(config: Config, configImports: Map<string, string>, configAdditionalImports?) {
         let sampleFiles = this._getComponentFiles(config);
-        let sampleFilesCount =  sampleFiles.length;
+        let sampleFilesCount = sampleFiles.length;
         let componentTsContent;
         let componentTsName;
         for (let i = 0; i < sampleFiles.length; i++) {
@@ -128,7 +126,7 @@ export class SampleAssetsGenerator extends Generator {
             this._getAppComponentHtml(componentTsContent, config.usesRouting)));
 
         if (this._logsEnabled) {
-            let stats = sampleFilesCount + " + " +  additionalFiles.length + " files";
+            let stats = sampleFilesCount + " + " + additionalFiles.length + " files";
             console.log("Live-Editing - generated " + stats + " for " + componentTsName);
         }
 
@@ -142,7 +140,7 @@ export class SampleAssetsGenerator extends Generator {
             console.log("Live-Editing - ERROR missing route for " + sampleName);
         } else {
             sampleRoute = sampleRoute.replace("/", "--") + ".json";
-            fs.writeFileSync(this.getAssetsSamplesDir() + sampleRoute, JSON.stringify(sampleDef));
+            fs.writeFileSync(this.options.samplesDir + sampleRoute, JSON.stringify(sampleDef));
             this._logsSampleFiles += sampleFilesCount;
             this._logsUtilitiesFiles += additionalFiles.length;
 
@@ -152,8 +150,7 @@ export class SampleAssetsGenerator extends Generator {
 
     private _getComponentFiles(config: Config): LiveEditingFile[] {
         let componentFiles = new Array<LiveEditingFile>();
-        let componentPath = this.componentPaths.get(config.component);
-        console.log(componentPath)
+        let componentPath = componentPaths.get(config.component);
         for (let i = 0; i < COMPONENT_FILE_EXTENSIONS.length; i++) {
             let componentFilePath = componentPath + "." + COMPONENT_FILE_EXTENSIONS[i];
             let fileContent = fs.readFileSync(path.join(componentFilePath), "utf8");
@@ -189,7 +186,7 @@ export class SampleAssetsGenerator extends Generator {
 
     private _getAppModuleConfig(config: Config, configImports, configAdditionalImports?) {
         let defaultNgDeclarations = ["AppComponent"];
-        let defaultNgImports = ["BrowserModule", "BrowserAnimationsModule","FormsModule"];
+        let defaultNgImports = ["BrowserModule", "BrowserAnimationsModule", "FormsModule"];
         let appModuleTemplate = fs.readFileSync(APP_MODULE_TEMPLATE_PATH, "utf8");
 
         let imports = this._getAppModuleImports(config, configImports, configAdditionalImports);
@@ -225,11 +222,11 @@ export class SampleAssetsGenerator extends Generator {
 
         let additionalAdjustments = "";
         if (config.appModuleConfig.additionalAdjustments !== undefined &&
-            config.appModuleConfig.additionalAdjustments.length > 0)  {
-                let adjustments: string[] = config.appModuleConfig.additionalAdjustments;
-                adjustments.forEach(a => {
-                    additionalAdjustments += a + "\n";
-                });
+            config.appModuleConfig.additionalAdjustments.length > 0) {
+            let adjustments: string[] = config.appModuleConfig.additionalAdjustments;
+            adjustments.forEach(a => {
+                additionalAdjustments += a + "\n";
+            });
         }
 
         appModuleTemplate = appModuleTemplate
@@ -249,8 +246,8 @@ export class SampleAssetsGenerator extends Generator {
 
         for (let i = 0; i < config.appModuleConfig.imports.length; i++) {
             let importName = config.appModuleConfig.imports[i];
-            let importModuleSpecifier = this.componentPaths.get(importName) ?? configImports.get(importName) ?? configAdditionalImports[importName];
-            if  (!importModuleSpecifier){
+            let importModuleSpecifier = componentPaths.get(importName) ?? configImports.get(importName) ?? configAdditionalImports[importName];
+            if (!importModuleSpecifier) {
                 throw new Error(`${importName} path is missing for ${config.component} config!`);
             }
             if (sampleImports.has(importModuleSpecifier)) {
@@ -279,7 +276,7 @@ export class SampleAssetsGenerator extends Generator {
     }
 
     private _formatAppModuleTypes(types: string[], multiline: boolean, tabsCount: number,
-                                  suffixIfMultiple: string = null): string {
+        suffixIfMultiple: string = null): string {
         if (types.length === 1 && !multiline) {
             return types.join("");
         }

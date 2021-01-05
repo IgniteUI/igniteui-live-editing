@@ -3,7 +3,7 @@
 // tslint:disable:no-implicit-dependencies
 import * as fs from "fs";
 import * as path from "path";
-import { DependenciesType } from "./DependenciesType";
+import { DependenciesType } from "../public";
 
 const PACKAGES_CONFIG_PATH = path.join(process.cwd(), "package.json");
 

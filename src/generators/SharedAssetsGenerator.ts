@@ -1,8 +1,7 @@
 // tslint:disable:prefer-const
 import * as fs from "fs";
 import * as path from "path";
-import { Generator, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER } from "./Generator";
-import { IOptions, LiveEditingFile } from "./misc/LiveEditingFile";
+import { LiveEditingFile, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER } from "./misc/LiveEditingFile";
 import { SharedAssetsFile } from "./misc/SharedAssetsFile";
 import { SharedAssetsGeneratorArgs } from "./misc/SharedAssetsGeneratorArgs";
 import { DevDependencyResolver } from "../services/DependencyResolver";
@@ -13,10 +12,9 @@ const ANGULAR_JSON_TEMPLATE_PATH = path.join(__dirname, "../templates/angular.js
 const MAIN_TS_FILE_PATH = path.join(__dirname, "../templates/main.ts.template");
 const APP_COMPONENT_SCSS_PATH = path.join(process.cwd(), "src/app/app.component.scss");
 const APP_COMPONENT_TS_PATH = path.join(__dirname, "../templates/app.component.ts.template");
-export class SharedAssetsGenerator extends Generator {
+export class SharedAssetsGenerator {
 
-    constructor(protected options: IOptions) {
-        super(options);
+    constructor(private sampleAssetsDir: string) {
         console.log("Live-Editing - SharedAssetsGenerator... ");
     }
 
@@ -49,6 +47,6 @@ export class SharedAssetsGenerator extends Generator {
         files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + "app.component.ts", args.appComponentTsFileContent));
 
         let sharedFile = new SharedAssetsFile(files, new DevDependencyResolver().devDependencies);
-        fs.writeFileSync(this.getAssetsSamplesDir() + "shared.json", JSON.stringify(sharedFile));
+        fs.writeFileSync(this.sampleAssetsDir + "shared.json", JSON.stringify(sharedFile));
     }
 }
