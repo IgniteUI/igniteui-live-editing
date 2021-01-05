@@ -12,7 +12,7 @@ const tsc = (cb) => {
         stdio: 'inherit'
     }).on('close', function (err) {
         if (err) {
-            var err = new Error('TypeScript compiler failed');
+            var err = new Error('TSC failed');
             err.showStack = false;
             cb(err);
         } else {
