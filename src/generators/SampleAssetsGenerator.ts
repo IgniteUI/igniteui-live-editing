@@ -78,7 +78,7 @@ export class SampleAssetsGenerator {
     private _generateRoutes() {
         console.log("Live-Editing - generating component routes...");
 
-        const moduleRoutes = appRouting.get(this.options.module.moduleName);
+        const moduleRoutes = appRouting.get(this.options.module.moduleName ?? appRouting.keys().next().value);
         for (let i = 0; i < moduleRoutes.length; i++) {
             let moduleName = moduleRoutes[i].module;
             let modulePath = moduleRoutes[i].path;
