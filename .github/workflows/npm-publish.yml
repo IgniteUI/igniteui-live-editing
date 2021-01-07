@@ -1,0 +1,30 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Npm.js deploy
+
+on:
+  release:
+    types: [created]    
+
+jobs:
+  npm-publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 14
+        registry-url: 'https://registry.npmjs.org'
+    - run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+    - run: echo ${VERSION}
+    - run: npm ci
+    - run: npm run build
+    - run: if [[ ${VERSION} == *"alpha"* || ${VERSION} == *"beta"* || ${VERSION} == *"rc"* ]]; then echo "NPM_TAG=next"; else echo "NPM_TAG=latest"; fi >> $GITHUB_ENV
+    - run: echo ${NPM_TAG}
+    - run: npm version ${VERSION} --no-git-tag-version --save --verbose
+      working-directory: lib
+    - run: npm publish --tag ${NPM_TAG}
+      working-directory: lib
+      env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
