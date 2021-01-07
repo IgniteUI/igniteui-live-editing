@@ -16,7 +16,6 @@ jobs:
       with:
         node-version: 14
         registry-url: 'https://registry.npmjs.org'
-      if: ${{ steps.release.outputs.release_created }}
     - run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
     - run: echo ${VERSION}
     - run: npm ci
