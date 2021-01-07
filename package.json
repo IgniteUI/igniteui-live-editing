@@ -1,6 +1,6 @@
 {
   "name": "igniteui-live-editing",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "This feature helps us to provide each sample as a separate application to external consumers.",
   "main": "index.js",
   "types": "index.d.ts",
