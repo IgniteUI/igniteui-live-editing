@@ -22,7 +22,7 @@ jobs:
     - run: npm run build
     - run: if [[ ${VERSION} == *"alpha"* || ${VERSION} == *"beta"* || ${VERSION} == *"rc"* ]]; then echo "NPM_TAG=next"; else echo "NPM_TAG=latest"; fi >> $GITHUB_ENV
     - run: echo ${NPM_TAG}
-    - run: cp ../../README.md README.md
+    - run: cp ../README.md README.md
       working-directory: lib
     - run: npm version ${VERSION} --no-git-tag-version --save --verbose
       working-directory: lib
