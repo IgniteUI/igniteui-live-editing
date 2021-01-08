@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as fsExtra from 'fs-extra';
 // tslint:disable-next-line: no-implicit-dependencies
 import * as path from "path";
 
@@ -13,6 +14,10 @@ export async function generateLiveEditing(options: ILiveEditingOptions, baseDir 
     let routingPathService = new TsRoutingPathService(baseDir, options.module.routerPath);
 
     options.samplesDir = path.join(baseDir, options.samplesDir + "/samples/");
+
+    if(fs.existsSync(options.samplesDir)) fsExtra.removeSync(options.samplesDir);
+    fs.mkdirSync(options.samplesDir);
+
     routingPathService.generateRouting();
 
     console.log("-----------------------------------------------------");
