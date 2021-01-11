@@ -47,7 +47,7 @@ export class SampleAssetsGenerator {
 
         console.log("Live-Editing - generating component samples...");
 
-        import(path.join(process.cwd(), this.options.configGeneratorPath)).
+       await import(path.join(process.cwd(), this.options.configGeneratorPath)).
             then(m => {
                 const GENERATORS = m[Object.keys(m)[0]];
 

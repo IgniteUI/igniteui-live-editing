@@ -15,26 +15,25 @@ export async function generateLiveEditing(options: ILiveEditingOptions, baseDir 
 
     options.samplesDir = path.join(baseDir, options.samplesDir + "/samples/");
 
-    if(fs.existsSync(options.samplesDir)) fsExtra.removeSync(options.samplesDir);
+    if (fs.existsSync(options.samplesDir)) fsExtra.removeSync(options.samplesDir);
     fs.mkdirSync(options.samplesDir);
 
     routingPathService.generateRouting();
 
     console.log("-----------------------------------------------------");
     console.log("Starting Live-Editing Generation - for " + baseDir);
-    
-    
-    new SampleAssetsGenerator(options).generateSamplesAssets()
-    .then(console.log)
-    .then(() => {
-        let metadata = new MetaData();
-        fs.writeFileSync(options.samplesDir + "/meta.json", JSON.stringify(metadata));
-    })
-    .then(() => {
-        console.log("-----------------------------------------------------");
-        console.log("Live-Editing - output folder: " + options.samplesDir);
-    })
-    .catch(e => { throw new Error(e)});
 
     new SharedAssetsGenerator(options.samplesDir).generateSharedAssets();
+
+    await new SampleAssetsGenerator(options).generateSamplesAssets()
+        .then(console.log)
+        .then(() => {
+            let metadata = new MetaData();
+            fs.writeFileSync(options.samplesDir + "/meta.json", JSON.stringify(metadata));
+        })
+        .then(() => {
+            console.log("-----------------------------------------------------");
+            console.log("Live-Editing - output folder: " + options.samplesDir);
+        })
+        .catch(e => { throw new Error(e) });
 }
