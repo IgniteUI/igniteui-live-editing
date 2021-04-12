@@ -23,7 +23,7 @@ export async function generateLiveEditing(options: ILiveEditingOptions, baseDir 
     console.log("-----------------------------------------------------");
     console.log("Starting Live-Editing Generation - for " + baseDir);
 
-    new SharedAssetsGenerator(options.samplesDir).generateSharedAssets();
+    new SharedAssetsGenerator(options).generateSharedAssets();
 
     await new SampleAssetsGenerator(options).generateSamplesAssets()
         .then(console.log)

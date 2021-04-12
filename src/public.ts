@@ -81,5 +81,6 @@ export interface ILiveEditingOptions {
         routerPath:string,
         moduleName?: string
     };
+    additionalSharedStyles?:string[];
 }
 

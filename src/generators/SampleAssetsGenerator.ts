@@ -156,10 +156,25 @@ export class SampleAssetsGenerator {
             let fileContent = fs.readFileSync(path.join(componentFilePath), "utf8");
             let file = new LiveEditingFile(componentFilePath.substr(componentFilePath.indexOf("src")), fileContent, true, COMPONENT_FILE_EXTENSIONS[i], COMPONENT_FILE_EXTENSIONS[i]);
             this._shortenComponentPath(config, file);
+            if(this.options.additionalSharedStyles?.length &&
+               COMPONENT_FILE_EXTENSIONS[i] === COMPONENT_STYLE_FILE_EXTENSION
+               && config.shortenComponentPathBy) this.resolveRelativePathToGlobalStyles(config.shortenComponentPathBy, file);
+
             componentFiles.push(file);
         }
 
         return componentFiles;
+    }
+
+    private resolveRelativePathToGlobalStyles(shortenPath: string , stylefile: LiveEditingFile) {
+        let shortenPathToRelative = shortenPath.replace(new RegExp(/\//g),  " ").trim().split(" ").map(() =>"..").join("/") + "/";
+        let importStatements = stylefile.content.match(new RegExp(/@import ("|')([\.\.]{2}\/){2,}[^;]*/g));
+        if(importStatements?.length) {
+            importStatements.forEach(s => {
+                let newRel = s.replace(shortenPathToRelative, "");
+                stylefile.content = stylefile.content.replace(s, newRel);
+            });
+        }
     }
 
     private _getAdditionalFiles(config: Config): LiveEditingFile[] {
