@@ -5,6 +5,7 @@ import { LiveEditingFile, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER } from "./misc/Li
 import { SharedAssetsFile } from "./misc/SharedAssetsFile";
 import { SharedAssetsGeneratorArgs } from "./misc/SharedAssetsGeneratorArgs";
 import { DevDependencyResolver } from "../services/DependencyResolver";
+import { ILiveEditingOptions } from "../public";
 const INDEX_FILE_PATH = path.join(process.cwd(), "src/index.html");
 const POLYPFILLS_FILE_PATH = path.join(process.cwd(), "src/polyfills.ts");
 const STYLES_FILE_PATH = path.join(process.cwd(), "src/styles.scss");
@@ -14,7 +15,7 @@ const APP_COMPONENT_SCSS_PATH = path.join(process.cwd(), "src/app/app.component.
 const APP_COMPONENT_TS_PATH = path.join(__dirname, "../templates/app.component.ts.template");
 export class SharedAssetsGenerator {
 
-    constructor(private sampleAssetsDir: string) {
+    constructor(private options: ILiveEditingOptions) {
         console.log("Live-Editing - SharedAssetsGenerator... ");
     }
 
@@ -36,6 +37,12 @@ export class SharedAssetsGenerator {
         let files = new Array<LiveEditingFile>();
         let polyfillsFile = fs.readFileSync(POLYPFILLS_FILE_PATH, "utf8");
 
+        if(this.options.additionalSharedStyles?.length) {
+            this.options.additionalSharedStyles.forEach(fileName => {
+                let filePath =  path.join(process.cwd(), SAMPLE_SRC_FOLDER, fileName);
+                files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + fileName, fs.readFileSync(filePath, "utf8")))
+            });
+        }
 
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "index.html", indexFile));
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "polyfills.ts", polyfillsFile));
@@ -47,6 +54,6 @@ export class SharedAssetsGenerator {
         files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + "app.component.ts", args.appComponentTsFileContent));
 
         let sharedFile = new SharedAssetsFile(files, new DevDependencyResolver().devDependencies);
-        fs.writeFileSync(this.sampleAssetsDir + "shared.json", JSON.stringify(sharedFile));
+        fs.writeFileSync(this.options.samplesDir + "shared.json", JSON.stringify(sharedFile));
     }
 }
