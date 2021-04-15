@@ -76,11 +76,12 @@ type Platform = "angular" | "react" | "blazor" | "wc";
 export interface ILiveEditingOptions {
     platform: Platform,
     samplesDir: string,
-    configGeneratorPath:  string;
+    configGeneratorPath:  string,
     module: {
         routerPath:string,
         moduleName?: string
     };
-    additionalSharedStyles?:string[];
+    additionalSharedStyles?:string[],
+    projectDir?: string;
 }
 
