@@ -6,12 +6,8 @@ import { SharedAssetsFile } from "./misc/SharedAssetsFile";
 import { SharedAssetsGeneratorArgs } from "./misc/SharedAssetsGeneratorArgs";
 import { DevDependencyResolver } from "../services/DependencyResolver";
 import { ILiveEditingOptions } from "../public";
-const INDEX_FILE_PATH = path.join(process.cwd(), "src/index.html");
-const POLYPFILLS_FILE_PATH = path.join(process.cwd(), "src/polyfills.ts");
-const STYLES_FILE_PATH = path.join(process.cwd(), "src/styles.scss");
 const ANGULAR_JSON_TEMPLATE_PATH = path.join(__dirname, "../templates/angular.json.template");
 const MAIN_TS_FILE_PATH = path.join(__dirname, "../templates/main.ts.template");
-const APP_COMPONENT_SCSS_PATH = path.join(process.cwd(), "src/app/app.component.scss");
 const APP_COMPONENT_TS_PATH = path.join(__dirname, "../templates/app.component.ts.template");
 export class SharedAssetsGenerator {
 
@@ -20,6 +16,8 @@ export class SharedAssetsGenerator {
     }
 
     public generateSharedAssets() {
+        const STYLES_FILE_PATH = path.join(process.cwd(), (this.options.projectDir ?? "") ,"src/styles.scss");
+        const APP_COMPONENT_SCSS_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/app/app.component.scss");
         let styles = fs.readFileSync(STYLES_FILE_PATH, "utf8");
         let appComponentScssFileContent = fs.readFileSync(APP_COMPONENT_SCSS_PATH, "utf8");
         let appComponentTsFileContnet = fs.readFileSync(APP_COMPONENT_TS_PATH, "utf8");
@@ -31,6 +29,9 @@ export class SharedAssetsGenerator {
     }
 
     private _generateSharedAssets(args: SharedAssetsGeneratorArgs) {
+        const INDEX_FILE_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/index.html");
+        const POLYPFILLS_FILE_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/polyfills.ts");
+
         let indexFile = fs.readFileSync(INDEX_FILE_PATH, "utf8");
         let angularJsonFile = fs.readFileSync(args.angularJsonFilePath, "utf8");
         let mainTsFile = fs.readFileSync(MAIN_TS_FILE_PATH, "utf8");
