@@ -9,6 +9,7 @@ import { ILiveEditingOptions } from "../public";
 const ANGULAR_JSON_TEMPLATE_PATH = path.join(__dirname, "../templates/angular.json.template");
 const MAIN_TS_FILE_PATH = path.join(__dirname, "../templates/main.ts.template");
 const APP_COMPONENT_TS_PATH = path.join(__dirname, "../templates/app.component.ts.template");
+const TS_CONFIG_FILE_PATH = path.join(__dirname, "../templates/tsconfig.json.template");
 export class SharedAssetsGenerator {
 
     constructor(private options: ILiveEditingOptions) {
@@ -37,6 +38,7 @@ export class SharedAssetsGenerator {
         let mainTsFile = fs.readFileSync(MAIN_TS_FILE_PATH, "utf8");
         let files = new Array<LiveEditingFile>();
         let polyfillsFile = fs.readFileSync(POLYPFILLS_FILE_PATH, "utf8");
+        let tsConfigFile = fs.readFileSync(TS_CONFIG_FILE_PATH, "utf8");
 
         if(this.options.additionalSharedStyles?.length) {
             this.options.additionalSharedStyles.forEach(fileName => {
@@ -53,8 +55,9 @@ export class SharedAssetsGenerator {
         files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + args.appComponentStylesFileName,
              args.appComponentStylesFileContent));
         files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + "app.component.ts", args.appComponentTsFileContent));
-
-        let sharedFile = new SharedAssetsFile(files, new DevDependencyResolver().devDependencies);
+        
+        let tsConfig = new LiveEditingFile("tsconfig.json", tsConfigFile);
+        let sharedFile = new SharedAssetsFile(files, new DevDependencyResolver().devDependencies, tsConfig);
         fs.writeFileSync(this.options.samplesDir + "shared.json", JSON.stringify(sharedFile));
     }
 }

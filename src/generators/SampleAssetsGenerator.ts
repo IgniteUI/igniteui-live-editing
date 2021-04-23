@@ -132,8 +132,7 @@ export class SampleAssetsGenerator {
 
         let dependencies = this._dependencyResolver.resolveSampleDependencies(
             config.dependenciesType, config.additionalDependencies);
-        let sampleDef = new SampleDefinitionFile(sampleFiles, dependencies);
-
+        let sampleDef = new SampleDefinitionFile(sampleFiles, dependencies, config.useIvy);
         let sampleName = config.component;
         let sampleRoute = this._componentRoutes.get(sampleName);
         if (sampleRoute === undefined) {
