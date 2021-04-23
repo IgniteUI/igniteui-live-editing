@@ -44,22 +44,23 @@ export class Config {
     public dependenciesType: DependenciesType;
     public additionalDependencies: string[];
     public shortenComponentPathBy: string;
-
+    public useIvy: boolean;
     constructor(fields: {
         component: string,
         additionalFiles?: string[],
         appModuleConfig: AppModuleConfig,
         dependenciesType?: DependenciesType,
-        additionalDependencies?: string[]
-        shortenComponentPathBy?: string
+        additionalDependencies?: string[],
+        shortenComponentPathBy?: string,
+        useIvy?:boolean
     }) {
         this.component = fields.component;
         this.additionalFiles = fields.additionalFiles;
         this.appModuleConfig = fields.appModuleConfig;
-        this.dependenciesType = fields.dependenciesType === undefined ?
-            DependenciesType.Default : fields.dependenciesType;
+        this.dependenciesType = fields.dependenciesType ?? DependenciesType.Default;
         this.additionalDependencies = fields.additionalDependencies;
         this.shortenComponentPathBy = fields.shortenComponentPathBy;
+        this.useIvy = fields.useIvy ?? false;
     }
 }
 

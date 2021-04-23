@@ -23,9 +23,7 @@ const SHARED_DEV_DEPENDENCIES = {
     "typescript": ""
 };
 
-const DEPENDENCIES_WITH_FIXED_VERSION = {
-    "tslib": "1.13.0"
-};
+const DEPENDENCIES_WITH_FIXED_VERSION = {};
 
 const SHARED_DEPENDENCIES = [
     "@angular/common",
