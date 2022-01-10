@@ -5,7 +5,6 @@ import { LiveEditingFile, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER, SAMPLE_ENVIRONME
 import { SharedAssetsFile } from "./misc/SharedAssetsFile";
 import { SharedAssetsGeneratorArgs } from "./misc/SharedAssetsGeneratorArgs";
 import { DevDependencyResolver } from "../services/DependencyResolver";
-//import { packageFile } from "../services/DependencyResolver";
 import { ILiveEditingOptions } from "../public";
 const ANGULAR_JSON_TEMPLATE_PATH = path.join(__dirname, "../templates/angular.json.template");
 const MAIN_TS_FILE_PATH = path.join(__dirname, "../templates/main.ts.template");
@@ -35,8 +34,6 @@ export class SharedAssetsGenerator {
         this._generateSharedAssets(args);
     }
 
-    //generating the main files as index, main etc.
-    //should generate the new files for webcontainers here the rest should be the same
     private _generateSharedAssets(args: SharedAssetsGeneratorArgs) {
         const INDEX_FILE_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/index.html");
         const POLYPFILLS_FILE_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/polyfills.ts");
