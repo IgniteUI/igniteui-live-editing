@@ -61,14 +61,14 @@ export class SharedAssetsGenerator {
             files.push(new LiveEditingFile("tsconfig.app.json", tsConfigAppFile));
             files.push(new LiveEditingFile("package.json", packageJsonFile));
             files.push(new LiveEditingFile(".stackblitzrc", stackblitzConfigFile));
+            files.push(new LiveEditingFile(SAMPLE_ENVIRONMENTS_FOLDER + "environment.ts", environmentFile));
+            files.push(new LiveEditingFile(SAMPLE_ENVIRONMENTS_FOLDER + "environment.prod.ts", environmentProdFile));
         }
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "index.html", indexFile));
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "polyfills.ts", polyfillsFile));
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + args.stylesFileName, args.stylesFileContent));
         files.push(new LiveEditingFile("angular.json", angularJsonFile));
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "main.ts", mainTsFile));
-        files.push(new LiveEditingFile(SAMPLE_ENVIRONMENTS_FOLDER + "environment.ts", environmentFile));
-        files.push(new LiveEditingFile(SAMPLE_ENVIRONMENTS_FOLDER + "environment.prod.ts", environmentProdFile));
         files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + args.appComponentStylesFileName,
              args.appComponentStylesFileContent));
         files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + "app.component.ts", args.appComponentTsFileContent));
