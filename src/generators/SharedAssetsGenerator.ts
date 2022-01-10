@@ -1,15 +1,21 @@
 // tslint:disable:prefer-const
 import * as fs from "fs";
 import * as path from "path";
-import { LiveEditingFile, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER } from "./misc/LiveEditingFile";
+import { LiveEditingFile, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER, SAMPLE_ENVIRONMENTS_FOLDER } from "./misc/LiveEditingFile";
 import { SharedAssetsFile } from "./misc/SharedAssetsFile";
 import { SharedAssetsGeneratorArgs } from "./misc/SharedAssetsGeneratorArgs";
 import { DevDependencyResolver } from "../services/DependencyResolver";
+//import { packageFile } from "../services/DependencyResolver";
 import { ILiveEditingOptions } from "../public";
 const ANGULAR_JSON_TEMPLATE_PATH = path.join(__dirname, "../templates/angular.json.template");
 const MAIN_TS_FILE_PATH = path.join(__dirname, "../templates/main.ts.template");
 const APP_COMPONENT_TS_PATH = path.join(__dirname, "../templates/app.component.ts.template");
 const TS_CONFIG_FILE_PATH = path.join(__dirname, "../templates/tsconfig.json.template");
+const TS_APP_CONFIG_FILE_PATH = path.join(__dirname, "../templates/tsconfig.app.json.template");
+const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
+const ENVIRONMENT_FILE_PATH = path.join(__dirname, "../templates/environment.ts.template");
+const ENVIRONMENT_PROD_FILE_PATH = path.join(__dirname, "../templates/environment.prod.ts.template");
+const STACKBLITZ_CONFIG_FILE_PATH = path.join(__dirname, "../templates/stackblitzrc.template");
 export class SharedAssetsGenerator {
 
     constructor(private options: ILiveEditingOptions) {
@@ -29,6 +35,8 @@ export class SharedAssetsGenerator {
         this._generateSharedAssets(args);
     }
 
+    //generating the main files as index, main etc.
+    //should generate the new files for webcontainers here the rest should be the same
     private _generateSharedAssets(args: SharedAssetsGeneratorArgs) {
         const INDEX_FILE_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/index.html");
         const POLYPFILLS_FILE_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/polyfills.ts");
@@ -36,9 +44,14 @@ export class SharedAssetsGenerator {
         let indexFile = fs.readFileSync(INDEX_FILE_PATH, "utf8");
         let angularJsonFile = fs.readFileSync(args.angularJsonFilePath, "utf8");
         let mainTsFile = fs.readFileSync(MAIN_TS_FILE_PATH, "utf8");
+        let environmentFile = fs.readFileSync(ENVIRONMENT_FILE_PATH, "utf8");
+        let environmentProdFile = fs.readFileSync(ENVIRONMENT_PROD_FILE_PATH, "utf8");
         let files = new Array<LiveEditingFile>();
         let polyfillsFile = fs.readFileSync(POLYPFILLS_FILE_PATH, "utf8");
         let tsConfigFile = fs.readFileSync(TS_CONFIG_FILE_PATH, "utf8");
+        let tsConfigAppFile = fs.readFileSync(TS_APP_CONFIG_FILE_PATH, "utf8");
+        let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
+        let stackblitzConfigFile = fs.readFileSync(STACKBLITZ_CONFIG_FILE_PATH, "utf8");
 
         if(this.options.additionalSharedStyles?.length) {
             this.options.additionalSharedStyles.forEach(fileName => {
@@ -52,9 +65,18 @@ export class SharedAssetsGenerator {
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + args.stylesFileName, args.stylesFileContent));
         files.push(new LiveEditingFile("angular.json", angularJsonFile));
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "main.ts", mainTsFile));
+        files.push(new LiveEditingFile(SAMPLE_ENVIRONMENTS_FOLDER + "environment.ts", environmentFile));
+        files.push(new LiveEditingFile(SAMPLE_ENVIRONMENTS_FOLDER + "environment.prod.ts", environmentProdFile));
+        //files.push(new LiveEditingFile("package.json", packageFile));
+        files.push(new LiveEditingFile("tsconfig.json", tsConfigFile));
+        files.push(new LiveEditingFile("tsconfig.app.json", tsConfigAppFile));
+        files.push(new LiveEditingFile("package.json", packageJsonFile));
+        files.push(new LiveEditingFile(".stackblitzrc", stackblitzConfigFile));
         files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + args.appComponentStylesFileName,
              args.appComponentStylesFileContent));
         files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + "app.component.ts", args.appComponentTsFileContent));
+        // console.log('all files added')
+        // console.log('--------------------------------------------------------' + packageFile);
         
         let tsConfig = new LiveEditingFile("tsconfig.json", tsConfigFile);
         let sharedFile = new SharedAssetsFile(files, new DevDependencyResolver().devDependencies, tsConfig);

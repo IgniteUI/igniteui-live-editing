@@ -1,6 +1,7 @@
 const ASSETS_REG_EXP = new RegExp("assets/");
 export const SAMPLE_SRC_FOLDER = "src/";
 export const SAMPLE_APP_FOLDER = "src/app/";
+export const SAMPLE_ENVIRONMENTS_FOLDER = "src/environments/";
 export class LiveEditingFile {
     public path: string;
     public content: string;
