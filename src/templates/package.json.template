@@ -31,6 +31,7 @@
     "igniteui-angular-maps": "13.0.0",
     "igniteui-angular-spreadsheet": "13.0.0",
     "igniteui-angular-spreadsheet-chart-adapter": "13.0.0",
+    "igniteui-dockmanager": "^1.6.0",
     "immediate": "^3.2.3",
     "intl": "^1.2.5",
     "jszip": "^3.7.1",
