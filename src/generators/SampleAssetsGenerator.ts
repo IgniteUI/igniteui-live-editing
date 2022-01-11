@@ -345,9 +345,9 @@ export class SampleAssetsGenerator {
             if (!additionalDependencies.includes(webContainerDeps[i])){
                 let expression = new RegExp('\\"' + webContainerDeps[i] + '\\": \\".*\\",', 'g')
                 packageJsonFile = packageJsonFile.replace(expression, "");
-                packageJsonFile = packageJsonFile.replace(/(\r?\n)\s*\1+/g,'')
             }
         }
+        packageJsonFile = packageJsonFile.replace(/(\r?\n)\s*\1+/g,'')
         return packageJsonFile;
     }
 }
