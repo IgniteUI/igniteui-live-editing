@@ -132,6 +132,12 @@ export class SampleAssetsGenerator {
 
         let dependencies = this._dependencyResolver.resolveSampleDependencies(
             config.dependenciesType, config.additionalDependencies);
+            
+        if (this.options.platform === 'angular'){
+            const packageJsonFile = this.removeRedundantDepencenies(JSON.stringify(dependencies));
+            sampleFiles.push(new LiveEditingFile("package.json", packageJsonFile));
+        }
+
         let sampleDef = new SampleDefinitionFile(sampleFiles, dependencies, config.useIvy);
         let sampleName = config.component;
         let sampleRoute = this._componentRoutes.get(sampleName);
@@ -327,5 +333,21 @@ export class SampleAssetsGenerator {
 
     private _getFileName(filePath: string) {
         return filePath.substring(filePath.lastIndexOf("/") + 1, filePath.length);
+    }
+
+    private removeRedundantDepencenies(additionalDependencies){
+        const webContainerDeps = 
+        ['igniteui-angular-charts','igniteui-angular-core', 'igniteui-angular-excel', 'igniteui-angular-gauges','igniteui-angular-maps',
+         'igniteui-angular-spreadsheet', 'igniteui-angular-spreadsheet-chart-adapter', '@juggle/resize-observer', '@microsoft/signalr', 'igniteui-dockmanager']
+        const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
+        let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
+        for (let i = 0; i < webContainerDeps.length; i++) {
+            if (!additionalDependencies.includes(webContainerDeps[i])){
+                let expression = new RegExp('\\"' + webContainerDeps[i] + '\\": \\".*\\",', 'g')
+                packageJsonFile = packageJsonFile.replace(expression, "");
+            }
+        }
+        packageJsonFile = packageJsonFile.replace(/(\r?\n)\s*\1+/g,'')
+        return packageJsonFile;
     }
 }

@@ -16,7 +16,6 @@ const SHARED_DEV_DEPENDENCIES = {
     "codelyzer": "",
     "jasmine-core": "",
     "jasmine-spec-reporter": "",
-    "node-sass": "",
     "sass.js": "",
     "ts-node": "",
     "tslint": "",
@@ -57,7 +56,8 @@ const DEFAULT_DEPENDENCIES = [
     "jszip",
     "immediate",
     "intl",
-    "tslib"
+    "tslib",
+    "sass"
 ];
 
 const CHARTS_DEPENDENCIES = [
