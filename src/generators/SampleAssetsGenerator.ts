@@ -173,7 +173,7 @@ export class SampleAssetsGenerator {
 
     private resolveRelativePathToGlobalStyles(shortenPath: string , stylefile: LiveEditingFile) {
         let shortenPathToRelative = shortenPath.replace(new RegExp(/\//g),  " ").trim().split(" ").map(() =>"..").join("/") + "/";
-        let importStatements = stylefile.content.match(new RegExp(/@import ("|')([\.\.]{2}\/){2,}[^;]*/g));
+        let importStatements = stylefile.content.match(new RegExp(/@use ("|')([\.\.]{2}\/){2,}[^;]*/g));
         if(importStatements?.length) {
             importStatements.forEach(s => {
                 let newRel = s.replace(shortenPathToRelative, "");
