@@ -13,6 +13,7 @@ import { SampleDefinitionFile } from "./misc/SampleDefinitionFile";
 const APP_MODULE_TEMPLATE_PATH = path.join(__dirname, "../templates/app.module.ts.template");
 
 const COMPONENT_STYLE_FILE_EXTENSION = "scss";
+const ROOT_MODULE_PATHS = ["app/grid-crm"];
 const COMPONENT_FILE_EXTENSIONS = ["ts", "html", COMPONENT_STYLE_FILE_EXTENSION];
 
 export class SampleAssetsGenerator {
@@ -144,7 +145,11 @@ export class SampleAssetsGenerator {
         if (sampleRoute === undefined) {
             console.log("Live-Editing - ERROR missing route for " + sampleName);
         } else {
-            sampleRoute = sampleRoute.replace("/", "--") + ".json";
+            if (ROOT_MODULE_PATHS.includes(sampleRoute)) {
+                sampleRoute = sampleRoute.replace("app/", "") + ".json";
+            } else {
+                sampleRoute = sampleRoute.replace("/", "--") + ".json";
+            }
             fs.writeFileSync(this.options.samplesDir + sampleRoute, JSON.stringify(sampleDef));
             this._logsSampleFiles += sampleFilesCount;
             this._logsUtilitiesFiles += additionalFiles.length;
