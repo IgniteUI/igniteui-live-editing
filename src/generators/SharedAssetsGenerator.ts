@@ -14,6 +14,7 @@ const TS_APP_CONFIG_FILE_PATH = path.join(__dirname, "../templates/tsconfig.app.
 const ENVIRONMENT_FILE_PATH = path.join(__dirname, "../templates/environment.ts.template");
 const ENVIRONMENT_PROD_FILE_PATH = path.join(__dirname, "../templates/environment.prod.ts.template");
 const STACKBLITZ_CONFIG_FILE_PATH = path.join(__dirname, "../templates/stackblitzrc.template");
+const CODESANDBOX_TASKS_FILE_PATH = path.join(__dirname, "../templates/tasks.json.template");
 export class SharedAssetsGenerator {
 
     constructor(private options: ILiveEditingOptions) {
@@ -47,6 +48,7 @@ export class SharedAssetsGenerator {
         let tsConfigFile = fs.readFileSync(TS_CONFIG_FILE_PATH, "utf8");
         let tsConfigAppFile = fs.readFileSync(TS_APP_CONFIG_FILE_PATH, "utf8");
         let stackblitzConfigFile = fs.readFileSync(STACKBLITZ_CONFIG_FILE_PATH, "utf8");
+        let codesandboxTasks= fs.readFileSync(CODESANDBOX_TASKS_FILE_PATH, "utf8");
 
         if(this.options.additionalSharedStyles?.length) {
             this.options.additionalSharedStyles.forEach(fileName => {
@@ -58,6 +60,7 @@ export class SharedAssetsGenerator {
             files.push(new LiveEditingFile("tsconfig.json", tsConfigFile));
             files.push(new LiveEditingFile("tsconfig.app.json", tsConfigAppFile));
             files.push(new LiveEditingFile(".stackblitzrc", stackblitzConfigFile));
+            files.push(new LiveEditingFile(".codesandbox/tasks.json", codesandboxTasks));
             files.push(new LiveEditingFile(SAMPLE_ENVIRONMENTS_FOLDER + "environment.ts", environmentFile));
             files.push(new LiveEditingFile(SAMPLE_ENVIRONMENTS_FOLDER + "environment.prod.ts", environmentProdFile));
         }
