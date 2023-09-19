@@ -343,7 +343,7 @@ export class SampleAssetsGenerator {
     private removeRedundantDepencenies(additionalDependencies){
         const webContainerDeps = 
         ['igniteui-angular-charts','igniteui-angular-core', 'igniteui-angular-excel', 'igniteui-angular-gauges','igniteui-angular-maps',
-         'igniteui-angular-spreadsheet', 'igniteui-angular-spreadsheet-chart-adapter', '@juggle/resize-observer', '@microsoft/signalr', 'igniteui-dockmanager']
+         'igniteui-angular-spreadsheet', 'igniteui-angular-spreadsheet-chart-adapter', '@juggle/resize-observer', '@microsoft/signalr', 'igniteui-dockmanager', 'igniteui-webcomponents']
         const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
         let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
         for (let i = 0; i < webContainerDeps.length; i++) {

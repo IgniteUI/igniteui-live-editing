@@ -33,6 +33,7 @@
     "igniteui-angular-spreadsheet": "^15.0.1",
     "igniteui-angular-spreadsheet-chart-adapter": "^15.0.1",
     "igniteui-dockmanager": "^1.12.4",
+    "igniteui-webcomponents": "^4.3.1",
     "immediate": "^3.2.3",
     "intl": "^1.2.5",
     "rxjs": "^6.6.7",
