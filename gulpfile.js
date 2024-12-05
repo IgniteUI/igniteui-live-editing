@@ -9,7 +9,7 @@ const BUILD_DIR = path.join(__dirname, './lib/');
 
 const tsc = (cb) => {
     spawn(path.normalize(`./node_modules/.bin/tsc${/^win/.test(os.platform()) ? '.cmd' : ''}`), ['-p', 'tsconfig.json'], {
-        stdio: 'inherit'
+        stdio: 'inherit', shell: true
     }).on('close', function (err) {
         if (err) {
             var err = new Error('TSC failed');

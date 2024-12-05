@@ -11,6 +11,8 @@ import { IConfigGenerator, Config, ILiveEditingOptions } from "../public";
 import { SampleDefinitionFile } from "./misc/SampleDefinitionFile";
 
 const APP_MODULE_TEMPLATE_PATH = path.join(__dirname, "../templates/app.module.ts.template");
+const APP_CONFIG_TEMPLATE_PATH = path.join(__dirname, "../templates/app.config.ts.template");
+const APP_COMPONENT_TEMPLATE_PATH = path.join(__dirname, "../templates/app.component.ts.template");
 
 const COMPONENT_STYLE_FILE_EXTENSION = "scss";
 const ROOT_MODULE_PATHS = ["app/grid-crm"];
@@ -90,7 +92,7 @@ export class SampleAssetsGenerator {
             }
             for (let j = 0; j < moduleRoutes[i].routes.length; j++) {
                 let componentRoute = moduleRoutes[i].routes[j];
-                let routePath = modulePath;
+                let routePath = 'app';
                 if (componentRoute.route) {
                     routePath += "/" + componentRoute.route;
                 }
@@ -118,13 +120,24 @@ export class SampleAssetsGenerator {
             sampleFiles = sampleFiles.concat(additionalFiles);
         }
 
-        let appModuleFile = new LiveEditingFile(
+        /*let appModuleFile = new LiveEditingFile(
             SAMPLE_APP_FOLDER + "app.module.ts", this._getAppModuleConfig(config, configImports, configAdditionalImports), true, 'ts', 'modules');
         this._shortenComponentPath(config, appModuleFile);
         sampleFiles.push(appModuleFile);
+        */
+        sampleFiles.push(new LiveEditingFile(
+           SAMPLE_APP_FOLDER + "app.component.ts",
+           this._getAppComponentTs(config, sampleFiles)
+        ));
         sampleFiles.push(new LiveEditingFile(
             SAMPLE_APP_FOLDER + "app.component.html",
             this._getAppComponentHtml(componentTsContent, config.usesRouting)));
+        sampleFiles.push(new LiveEditingFile(
+            `${SAMPLE_APP_FOLDER}app.config.ts`,
+            this._getAppConfig(config, configImports, configAdditionalImports),
+            false,
+            'ts'
+        ));
 
         if (this._logsEnabled) {
             let stats = sampleFilesCount + " + " + additionalFiles.length + " files";
@@ -201,12 +214,101 @@ export class SampleAssetsGenerator {
         return additionalFiles;
     }
 
+    private _getAppComponentTs(config: Config, sampleFiles: LiveEditingFile[]) {
+        let appComponentTemplate = fs.readFileSync(APP_COMPONENT_TEMPLATE_PATH, "utf8");
+        const mainSampleTsPath = sampleFiles.filter(f => f.isMain && f.fileExtension === "ts")[0].path;
+        return appComponentTemplate
+            .replace("{sampleAppComponent}", config.component)
+            .replace(/\{appImport\}/g, `.\/${mainSampleTsPath.substring(mainSampleTsPath.indexOf("app/") + 4)}`);
+    }
+
     private _getAppComponentHtml(componentTsContent, usesRouting) {
         let selectorRegex = /selector:[\s]*["']([a-zA-Z0-9-]+)["']/g;
         let selectorComponent = selectorRegex.exec(componentTsContent)[1];
         let appComponentHtml = usesRouting ? "<router-outlet></router-outlet>" :
             "<" + selectorComponent + "></" + selectorComponent + ">";
         return appComponentHtml;
+    }
+
+    private _getAppConfig(config: Config, configImports, configAdditionalImports?) {
+        let appConfigTemplate = fs.readFileSync(APP_CONFIG_TEMPLATE_PATH, "utf8");
+        let imports = this._getAppConfigImports(config);
+
+        appConfigTemplate = appConfigTemplate
+            .replace("{imports}", this._formatImports(imports))
+            .replace("{providers}", this._formatProviders(config));
+
+        return appConfigTemplate;
+    }
+
+    private _formatImports(imports: Map<string, string[]>) {
+        let returnString = "";
+        imports.forEach((value, key) => {
+            returnString += `import { ${value.sort().join(", ")} } from '${key}';\n`;
+        });
+        return returnString;
+    }
+
+    private _getAppConfigImports(config: Config): Map<string, string[]> {
+        const importMap = new Map<string, string[]>();
+        // this is always needed for the config file
+        importMap.set('@angular/core', ['ApplicationConfig']);
+        const appConfig = config.appConfig;
+        if (appConfig.modules && appConfig.modules.length) {
+            importMap.get('@angular/core').push('importProvidersFrom');
+            appConfig.modules.forEach(module => {
+                if (importMap.has(module.import)) {
+                    importMap.get(module.import).push(module.module);
+                }else {
+                    importMap.set(module.import, [module.module]);
+                }
+            });
+        }
+        if (appConfig.providers && appConfig.providers.length) {
+            appConfig.providers.forEach(provider => {
+                if (importMap.has(provider.import)) {
+                    importMap.get(provider.import).push(
+                        provider.provider.replace(/\(/g, "").replace(/\)/g, "")
+                    );
+                } else {
+                    importMap.set(provider.import, [
+                        provider.provider.replace(/\(/g, "").replace(/\)/g, "")
+                    ]);
+                }
+            });
+        }
+        if (appConfig.router) {
+            importMap.set('@angular/router', ['provideRouter', 'withComponentInputBinding']);
+        }
+        return importMap;
+    }
+
+    private _formatProviders(config: Config) {
+        let formatted = '';
+        if (config.appConfig.modules && config.appConfig.modules.length) {
+            formatted += 'importProvidersFrom(\n';
+            const modules = config.appConfig.modules.map(m => m.module);
+            modules.forEach((module, i) => {
+                formatted += `            ${module}${i < modules.length - 1 ? ',': ''}\n`;
+            });
+            formatted += '        )';
+        }
+        if (config.appConfig.providers && config.appConfig.providers.length) {
+            if (formatted.length > 0) {
+                formatted += ',\n';
+            }
+            const providers = config.appConfig.providers.map(p => p.provider);
+            providers.forEach((provider, i) => {
+                formatted += `        ${provider}${i < providers.length - 1? ',\n': ''}`;
+            });
+        }
+        if (config.appConfig.router) {
+            if (formatted.length > 0) {
+                formatted += ',\n';
+            }
+            formatted += `        provideRouter([], withComponentInputBinding())`;
+        }
+        return formatted;
     }
 
     private _getAppModuleConfig(config: Config, configImports, configAdditionalImports?) {

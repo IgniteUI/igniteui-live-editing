@@ -36,11 +36,18 @@ export class AppModuleConfig {
     }
 }
 
+export interface AppConfig {
+    modules: ModuleProvider[];
+    providers: Provider[];
+    router?: string;
+}
+
 export class Config {
     public component: string;
     public usesRouting: boolean;
     public additionalFiles: string[];
-    public appModuleConfig: AppModuleConfig;
+    public appModuleConfig?: AppModuleConfig;
+    public appConfig: AppConfig;
     public dependenciesType: DependenciesType;
     public additionalDependencies: string[];
     public shortenComponentPathBy: string;
@@ -48,7 +55,8 @@ export class Config {
     constructor(fields: {
         component: string,
         additionalFiles?: string[],
-        appModuleConfig: AppModuleConfig,
+        appModuleConfig?: AppModuleConfig,
+        appConfig: AppConfig,
         dependenciesType?: DependenciesType,
         additionalDependencies?: string[],
         shortenComponentPathBy?: string,
@@ -56,6 +64,7 @@ export class Config {
     }) {
         this.component = fields.component;
         this.additionalFiles = fields.additionalFiles;
+        this.appConfig = fields.appConfig;
         this.appModuleConfig = fields.appModuleConfig;
         this.dependenciesType = fields.dependenciesType ?? DependenciesType.Default;
         this.additionalDependencies = fields.additionalDependencies;
@@ -84,5 +93,15 @@ export interface ILiveEditingOptions {
     };
     additionalSharedStyles?:string[],
     projectDir?: string;
+}
+
+export interface ModuleProvider {
+    module: string,
+    import: string
+}
+
+export interface Provider {
+    provider: string,
+    import: string
 }
 

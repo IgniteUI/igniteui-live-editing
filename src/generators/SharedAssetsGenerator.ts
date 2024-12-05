@@ -8,7 +8,6 @@ import { DevDependencyResolver } from "../services/DependencyResolver";
 import { ILiveEditingOptions } from "../public";
 const ANGULAR_JSON_TEMPLATE_PATH = path.join(__dirname, "../templates/angular.json.template");
 const MAIN_TS_FILE_PATH = path.join(__dirname, "../templates/main.ts.template");
-const APP_COMPONENT_TS_PATH = path.join(__dirname, "../templates/app.component.ts.template");
 const TS_CONFIG_FILE_PATH = path.join(__dirname, "../templates/tsconfig.json.template");
 const TS_APP_CONFIG_FILE_PATH = path.join(__dirname, "../templates/tsconfig.app.json.template");
 const ENVIRONMENT_FILE_PATH = path.join(__dirname, "../templates/environment.ts.template");
@@ -27,11 +26,9 @@ export class SharedAssetsGenerator {
         const APP_COMPONENT_SCSS_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/app/app.component.scss");
         let styles = fs.readFileSync(STYLES_FILE_PATH, "utf8");
         let appComponentScssFileContent = fs.readFileSync(APP_COMPONENT_SCSS_PATH, "utf8");
-        let appComponentTsFileContnet = fs.readFileSync(APP_COMPONENT_TS_PATH, "utf8");
 
         let args = new SharedAssetsGeneratorArgs("styles.scss", styles, ANGULAR_JSON_TEMPLATE_PATH,
-            "app.component.scss", appComponentScssFileContent,
-            appComponentTsFileContnet);
+            "app.component.scss", appComponentScssFileContent);
         this._generateSharedAssets(args);
     }
 
@@ -74,7 +71,6 @@ export class SharedAssetsGenerator {
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "main.ts", mainTsFile));
         files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + args.appComponentStylesFileName,
              args.appComponentStylesFileContent));
-        files.push(new LiveEditingFile(SAMPLE_APP_FOLDER + "app.component.ts", args.appComponentTsFileContent));
         
         let tsConfig = new LiveEditingFile("tsconfig.json", tsConfigFile);
         let sharedFile = new SharedAssetsFile(files, new DevDependencyResolver().devDependencies, tsConfig);
