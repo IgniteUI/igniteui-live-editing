@@ -15,7 +15,7 @@ const APP_CONFIG_TEMPLATE_PATH = path.join(__dirname, "../templates/app.config.t
 const APP_COMPONENT_TEMPLATE_PATH = path.join(__dirname, "../templates/app.component.ts.template");
 
 const COMPONENT_STYLE_FILE_EXTENSION = "scss";
-const ROOT_MODULE_PATHS = ["app/grid-crm"];
+const ROOT_MODULE_PATHS = ["grid-crm/grid-crm"];
 const COMPONENT_FILE_EXTENSIONS = ["ts", "html", COMPONENT_STYLE_FILE_EXTENSION];
 
 export class SampleAssetsGenerator {
@@ -84,7 +84,6 @@ export class SampleAssetsGenerator {
         const moduleRoutes = appRouting.get(this.options.module.moduleName ?? appRouting.keys().next().value);
         for (let i = 0; i < moduleRoutes.length; i++) {
             let moduleName = moduleRoutes[i].module;
-            let modulePath = moduleRoutes[i].path;
             if (this._logsEnabled) {
                 let moduleStat = moduleRoutes[i].routes.length + " routes";
                 let moduleInfo = moduleName.replace("Module", " module");
@@ -92,7 +91,7 @@ export class SampleAssetsGenerator {
             }
             for (let j = 0; j < moduleRoutes[i].routes.length; j++) {
                 let componentRoute = moduleRoutes[i].routes[j];
-                let routePath = 'app';
+                let routePath = moduleRoutes[i].path || 'app';
                 if (componentRoute.route) {
                     routePath += "/" + componentRoute.route;
                 }
@@ -160,7 +159,7 @@ export class SampleAssetsGenerator {
             console.log("Live-Editing - ERROR missing route for " + sampleName);
         } else {
             if (ROOT_MODULE_PATHS.includes(sampleRoute)) {
-                sampleRoute = sampleRoute.replace("app/", "") + ".json";
+                sampleRoute = sampleRoute.replace("grid-crm/", "") + ".json";
             } else {
                 sampleRoute = sampleRoute.replace("/", "--") + ".json";
             }

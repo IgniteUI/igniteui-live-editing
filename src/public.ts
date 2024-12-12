@@ -39,7 +39,7 @@ export class AppModuleConfig {
 export interface AppConfig {
     modules: ModuleProvider[];
     providers: Provider[];
-    router?: string;
+    router?: boolean;
 }
 
 export class Config {
