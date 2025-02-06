@@ -11,9 +11,11 @@ import { IConfigGenerator, Config, ILiveEditingOptions } from "../public";
 import { SampleDefinitionFile } from "./misc/SampleDefinitionFile";
 
 const APP_MODULE_TEMPLATE_PATH = path.join(__dirname, "../templates/app.module.ts.template");
+const APP_CONFIG_TEMPLATE_PATH = path.join(__dirname, "../templates/app.config.ts.template");
+const APP_COMPONENT_TEMPLATE_PATH = path.join(__dirname, "../templates/app.component.ts.template");
 
 const COMPONENT_STYLE_FILE_EXTENSION = "scss";
-const ROOT_MODULE_PATHS = ["app/grid-crm"];
+const ROOT_MODULE_PATHS = ["grid-crm/grid-crm"];
 const COMPONENT_FILE_EXTENSIONS = ["ts", "html", COMPONENT_STYLE_FILE_EXTENSION];
 
 export class SampleAssetsGenerator {
@@ -48,7 +50,7 @@ export class SampleAssetsGenerator {
 
         console.log("Live-Editing - generating component samples...");
 
-       await import(path.join(process.cwd(), this.options.configGeneratorPath)).
+        await import(path.join(process.cwd(), this.options.configGeneratorPath)).
             then(m => {
                 const GENERATORS = m[Object.keys(m)[0]];
 
@@ -82,7 +84,6 @@ export class SampleAssetsGenerator {
         const moduleRoutes = appRouting.get(this.options.module.moduleName ?? appRouting.keys().next().value);
         for (let i = 0; i < moduleRoutes.length; i++) {
             let moduleName = moduleRoutes[i].module;
-            let modulePath = moduleRoutes[i].path;
             if (this._logsEnabled) {
                 let moduleStat = moduleRoutes[i].routes.length + " routes";
                 let moduleInfo = moduleName.replace("Module", " module");
@@ -90,7 +91,7 @@ export class SampleAssetsGenerator {
             }
             for (let j = 0; j < moduleRoutes[i].routes.length; j++) {
                 let componentRoute = moduleRoutes[i].routes[j];
-                let routePath = modulePath;
+                let routePath = moduleRoutes[i].path || 'app';
                 if (componentRoute.route) {
                     routePath += "/" + componentRoute.route;
                 }
@@ -118,13 +119,25 @@ export class SampleAssetsGenerator {
             sampleFiles = sampleFiles.concat(additionalFiles);
         }
 
-        let appModuleFile = new LiveEditingFile(
+        /*let appModuleFile = new LiveEditingFile(
             SAMPLE_APP_FOLDER + "app.module.ts", this._getAppModuleConfig(config, configImports, configAdditionalImports), true, 'ts', 'modules');
         this._shortenComponentPath(config, appModuleFile);
         sampleFiles.push(appModuleFile);
+        */
+        this._modifyImports(sampleFiles.filter(x => x.fileExtension === 'ts' && x.isMain), additionalFiles);
+        sampleFiles.push(new LiveEditingFile(
+            SAMPLE_APP_FOLDER + "app.component.ts",
+            this._getAppComponentTs(config, sampleFiles)
+        ));
         sampleFiles.push(new LiveEditingFile(
             SAMPLE_APP_FOLDER + "app.component.html",
             this._getAppComponentHtml(componentTsContent, config.usesRouting)));
+        sampleFiles.push(new LiveEditingFile(
+            `${SAMPLE_APP_FOLDER}app.config.ts`,
+            this._getAppConfig(config, configImports, configAdditionalImports),
+            false,
+            'ts'
+        ));
 
         if (this._logsEnabled) {
             let stats = sampleFilesCount + " + " + additionalFiles.length + " files";
@@ -133,8 +146,8 @@ export class SampleAssetsGenerator {
 
         let dependencies = this._dependencyResolver.resolveSampleDependencies(
             config.dependenciesType, config.additionalDependencies);
-            
-        if (this.options.platform === 'angular'){
+
+        if (this.options.platform === 'angular') {
             const packageJsonFile = this.removeRedundantDepencenies(JSON.stringify(dependencies));
             sampleFiles.push(new LiveEditingFile("package.json", packageJsonFile));
         }
@@ -146,7 +159,7 @@ export class SampleAssetsGenerator {
             console.log("Live-Editing - ERROR missing route for " + sampleName);
         } else {
             if (ROOT_MODULE_PATHS.includes(sampleRoute)) {
-                sampleRoute = sampleRoute.replace("app/", "") + ".json";
+                sampleRoute = sampleRoute.replace("grid-crm/", "") + ".json";
             } else {
                 sampleRoute = sampleRoute.replace("/", "--") + ".json";
             }
@@ -158,6 +171,24 @@ export class SampleAssetsGenerator {
         }
     }
 
+    private _modifyImports(files: LiveEditingFile[], additionalFiles: LiveEditingFile[]) {
+        const modifiedImports = new Map<string, string>();
+        additionalFiles.forEach(f => {
+            modifiedImports.set(this._nameFromPath(f.path), f.path);
+        })
+        files.forEach(f => {
+            const fromImports = Array.from(f.content.matchAll(/from\s+(?:"|')([^"']+)(?:"|')/g));
+            for (const g of fromImports) {
+                if (g.length <= 1)
+                    continue;
+                const name = this._getFileName(g[1]);
+                if (modifiedImports.has(name)) {
+                    f.content = f.content.replace(g[1], this._normalizePath(f.path, modifiedImports.get(name)));
+                }
+            }
+        });
+    }
+
     private _getComponentFiles(config: Config): LiveEditingFile[] {
         let componentFiles = new Array<LiveEditingFile>();
         let componentPath = componentPaths.get(config.component);
@@ -166,9 +197,9 @@ export class SampleAssetsGenerator {
             let fileContent = fs.readFileSync(path.join(componentFilePath), "utf8");
             let file = new LiveEditingFile(componentFilePath.substr(componentFilePath.indexOf("src")), fileContent, true, COMPONENT_FILE_EXTENSIONS[i], COMPONENT_FILE_EXTENSIONS[i]);
             this._shortenComponentPath(config, file);
-            if(this.options.additionalSharedStyles?.length &&
-               COMPONENT_FILE_EXTENSIONS[i] === COMPONENT_STYLE_FILE_EXTENSION
-               && config.shortenComponentPathBy) this.resolveRelativePathToGlobalStyles(config.shortenComponentPathBy, file);
+            if (this.options.additionalSharedStyles?.length &&
+                COMPONENT_FILE_EXTENSIONS[i] === COMPONENT_STYLE_FILE_EXTENSION
+                && config.shortenComponentPathBy) this.resolveRelativePathToGlobalStyles(config.shortenComponentPathBy, file);
 
             componentFiles.push(file);
         }
@@ -176,10 +207,10 @@ export class SampleAssetsGenerator {
         return componentFiles;
     }
 
-    private resolveRelativePathToGlobalStyles(shortenPath: string , stylefile: LiveEditingFile) {
-        let shortenPathToRelative = shortenPath.replace(new RegExp(/\//g),  " ").trim().split(" ").map(() =>"..").join("/") + "/";
+    private resolveRelativePathToGlobalStyles(shortenPath: string, stylefile: LiveEditingFile) {
+        let shortenPathToRelative = shortenPath.replace(new RegExp(/\//g), " ").trim().split(" ").map(() => "..").join("/") + "/";
         let importStatements = stylefile.content.match(new RegExp(/@use ("|')([\.\.]{2}\/){2,}[^;]*/g));
-        if(importStatements?.length) {
+        if (importStatements?.length) {
             importStatements.forEach(s => {
                 let newRel = s.replace(shortenPathToRelative, "");
                 stylefile.content = stylefile.content.replace(s, newRel);
@@ -201,12 +232,102 @@ export class SampleAssetsGenerator {
         return additionalFiles;
     }
 
+    private _getAppComponentTs(config: Config, sampleFiles: LiveEditingFile[]) {
+        let appComponentTemplate = fs.readFileSync(APP_COMPONENT_TEMPLATE_PATH, "utf8");
+        const mainSampleTsPath = sampleFiles.filter(f => f.isMain && f.fileExtension === "ts")[0].path;
+        return appComponentTemplate
+            .replace(/\{sampleAppComponent\}/g, config.component)
+            .replace(/\{appImport\}/g, `.\/${mainSampleTsPath.substring(mainSampleTsPath.indexOf("app/") + 4)}`)
+            .replace(".ts", "");
+    }
+
     private _getAppComponentHtml(componentTsContent, usesRouting) {
         let selectorRegex = /selector:[\s]*["']([a-zA-Z0-9-]+)["']/g;
         let selectorComponent = selectorRegex.exec(componentTsContent)[1];
         let appComponentHtml = usesRouting ? "<router-outlet></router-outlet>" :
             "<" + selectorComponent + "></" + selectorComponent + ">";
         return appComponentHtml;
+    }
+
+    private _getAppConfig(config: Config, configImports, configAdditionalImports?) {
+        let appConfigTemplate = fs.readFileSync(APP_CONFIG_TEMPLATE_PATH, "utf8");
+        let imports = this._getAppConfigImports(config);
+
+        appConfigTemplate = appConfigTemplate
+            .replace("{imports}", this._formatImports(imports))
+            .replace("{providers}", this._formatProviders(config));
+
+        return appConfigTemplate;
+    }
+
+    private _formatImports(imports: Map<string, string[]>) {
+        let returnString = "";
+        imports.forEach((value, key) => {
+            returnString += `import { ${value.sort().join(", ")} } from '${key}';\n`;
+        });
+        return returnString;
+    }
+
+    private _getAppConfigImports(config: Config): Map<string, string[]> {
+        const importMap = new Map<string, string[]>();
+        // this is always needed for the config file
+        importMap.set('@angular/core', ['ApplicationConfig']);
+        const appConfig = config.appConfig;
+        if (appConfig.modules && appConfig.modules.length) {
+            importMap.get('@angular/core').push('importProvidersFrom');
+            appConfig.modules.forEach(module => {
+                if (importMap.has(module.import)) {
+                    importMap.get(module.import).push(module.module);
+                } else {
+                    importMap.set(module.import, [module.module]);
+                }
+            });
+        }
+        if (appConfig.providers && appConfig.providers.length) {
+            appConfig.providers.forEach(provider => {
+                if (importMap.has(provider.import)) {
+                    importMap.get(provider.import).push(
+                        provider.provider.replace(/\(/g, "").replace(/\)/g, "")
+                    );
+                } else {
+                    importMap.set(provider.import, [
+                        provider.provider.replace(/\(/g, "").replace(/\)/g, "")
+                    ]);
+                }
+            });
+        }
+        if (appConfig.router) {
+            importMap.set('@angular/router', ['provideRouter', 'withComponentInputBinding']);
+        }
+        return importMap;
+    }
+
+    private _formatProviders(config: Config) {
+        let formatted = '';
+        if (config.appConfig.modules && config.appConfig.modules.length) {
+            formatted += 'importProvidersFrom(\n';
+            const modules = config.appConfig.modules.map(m => m.module);
+            modules.forEach((module, i) => {
+                formatted += `            ${module}${i < modules.length - 1 ? ',' : ''}\n`;
+            });
+            formatted += '        )';
+        }
+        if (config.appConfig.providers && config.appConfig.providers.length) {
+            if (formatted.length > 0) {
+                formatted += ',\n';
+            }
+            const providers = config.appConfig.providers.map(p => p.provider);
+            providers.forEach((provider, i) => {
+                formatted += `        ${provider}${i < providers.length - 1 ? ',\n' : ''}`;
+            });
+        }
+        if (config.appConfig.router) {
+            if (formatted.length > 0) {
+                formatted += ',\n';
+            }
+            formatted += `        provideRouter([], withComponentInputBinding())`;
+        }
+        return formatted;
     }
 
     private _getAppModuleConfig(config: Config, configImports, configAdditionalImports?) {
@@ -340,19 +461,38 @@ export class SampleAssetsGenerator {
         return filePath.substring(filePath.lastIndexOf("/") + 1, filePath.length);
     }
 
-    private removeRedundantDepencenies(additionalDependencies){
-        const webContainerDeps = 
-        ['igniteui-angular-charts','igniteui-angular-core', 'igniteui-angular-excel', 'igniteui-angular-gauges','igniteui-angular-maps',
-         'igniteui-angular-spreadsheet', 'igniteui-angular-spreadsheet-chart-adapter', '@juggle/resize-observer', '@microsoft/signalr', 'igniteui-dockmanager', 'igniteui-webcomponents']
+    private _nameFromPath(path: string) {
+        const name = path.split("/").pop();
+        return name.substring(0, name.lastIndexOf("."));
+    }
+
+    private _normalizePath(path1: string, path2: string): string {
+        let relativePath = path.relative(path.dirname(path1), path.dirname(path2));
+        relativePath = (relativePath + "/" + this._getFileName(path2))
+            .replace(".ts", "")
+            .replace(".html", "")
+            .replace(".scss", "")
+            .replace(/\\/g, "/")
+            .replace(/\/\//g, "/");
+        if (!relativePath.startsWith("..")) {
+            relativePath = "." + relativePath;
+        }
+        return relativePath;
+    }
+
+    private removeRedundantDepencenies(additionalDependencies) {
+        const webContainerDeps =
+            ['igniteui-angular-charts', 'igniteui-angular-core', 'igniteui-angular-excel', 'igniteui-angular-gauges', 'igniteui-angular-maps',
+                'igniteui-angular-spreadsheet', 'igniteui-angular-spreadsheet-chart-adapter', '@juggle/resize-observer', '@microsoft/signalr', 'igniteui-dockmanager', 'igniteui-webcomponents']
         const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
         let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
         for (let i = 0; i < webContainerDeps.length; i++) {
-            if (!additionalDependencies.includes(webContainerDeps[i])){
+            if (!additionalDependencies.includes(webContainerDeps[i])) {
                 let expression = new RegExp('\\"' + webContainerDeps[i] + '\\": \\".*\\",', 'g')
                 packageJsonFile = packageJsonFile.replace(expression, "");
             }
         }
-        packageJsonFile = packageJsonFile.replace(/(\r?\n)\s*\1+/g,'')
+        packageJsonFile = packageJsonFile.replace(/(\r?\n)\s*\1+/g, '')
         return packageJsonFile;
     }
 }

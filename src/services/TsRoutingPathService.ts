@@ -62,17 +62,18 @@ export class TsRoutingPathService {
                 appRouting.set(variableName.text, []);
                 routingArray.elements.forEach((node: ts.ObjectLiteralExpression) => {
                     [...properties] = node.properties;
-                    name = this.getObjectLiteralPropertyValue<ts.Identifier>(properties, 'module', ts.SyntaxKind.Identifier);
+                    // name = this.getObjectLiteralPropertyValue<ts.Identifier>(properties, 'module', ts.SyntaxKind.Identifier);
+                    const pathName = this.getObjectLiteralPropertyValue<ts.StringLiteral>(properties, 'path', ts.SyntaxKind.StringLiteral).text;
                     
-                    classRoutePath = this.getBaseDir(name.text);
+                    // classRoutePath = this.getBaseDir(name.text);
                     const componentRoutes =  this.getObjectLiteralPropertyValue<ts.PropertyAccessExpression>(properties, 'routes', ts.SyntaxKind.PropertyAccessExpression);
-                    route = { module: name.text, routes: [], path: classRoutePath} as IModuleRouting;
-                    const moduleName = route.module;
+                    route = { /*module: name.text, */routes: [], path: pathName } as IModuleRouting;
+                    //const moduleName = route.module;
                     const moduleRoutingIdentifier = componentRoutes.getChildren()[0].getText();
                     const moduleRoutingPath = `${this.routingImports.get(moduleRoutingIdentifier)}.ts`;
                     this.generateRouting(moduleRoutingPath, route);
                     appRouting.get(variableName.text).push(route);
-                    console.log(`Configure Routing and Paths for ${moduleName}`);
+                    console.log(`Configure Routing and Paths for ${pathName}`);
                 });
             });
         }
