@@ -1,4 +1,5 @@
 {imports}
+{additionalAdjustments}
 
 export const AppConfig: ApplicationConfig = {
     providers: [
