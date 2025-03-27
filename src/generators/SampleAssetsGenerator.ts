@@ -252,9 +252,11 @@ export class SampleAssetsGenerator {
     private _getAppConfig(config: Config, configImports, configAdditionalImports?) {
         let appConfigTemplate = fs.readFileSync(APP_CONFIG_TEMPLATE_PATH, "utf8");
         let imports = this._getAppConfigImports(config);
+        let additionalAdjustments = this._getAppAdditionalAdjustments(config);
 
         appConfigTemplate = appConfigTemplate
             .replace("{imports}", this._formatImports(imports))
+            .replace("{additionalAdjustments}", additionalAdjustments)
             .replace("{providers}", this._formatProviders(config));
 
         return appConfigTemplate;
@@ -300,6 +302,18 @@ export class SampleAssetsGenerator {
             importMap.set('@angular/router', ['provideRouter', 'withComponentInputBinding']);
         }
         return importMap;
+    }
+
+    private _getAppAdditionalAdjustments(config: Config): string {
+        let additionalAdjustments = "";
+        if (config.appConfig.additionalAdjustments !== undefined &&
+            config.appConfig.additionalAdjustments.length > 0) {
+            let adjustments: string[] = config.appConfig.additionalAdjustments;
+            adjustments.forEach(a => {
+                additionalAdjustments += a + "\n";
+            });
+        }
+        return additionalAdjustments;
     }
 
     private _formatProviders(config: Config) {

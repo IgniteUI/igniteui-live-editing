@@ -40,6 +40,7 @@ export interface AppConfig {
     modules: ModuleProvider[];
     providers: Provider[];
     router?: boolean;
+    additionalAdjustments?: string[];
 }
 
 export class Config {
