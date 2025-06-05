@@ -8,7 +8,7 @@ import { DependenciesType } from "../public";
 const PACKAGES_CONFIG_PATH = path.join(process.cwd(), "package.json");
 
 const SHARED_DEV_DEPENDENCIES = {
-    "@angular-devkit/build-angular": "",
+    "@angular/build": "",
     "@angular/cli": "",
     "@angular/compiler-cli": "",
     "@angular/language-service": "",
