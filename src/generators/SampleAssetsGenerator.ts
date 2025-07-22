@@ -13,6 +13,7 @@ import { SampleDefinitionFile } from "./misc/SampleDefinitionFile";
 const APP_MODULE_TEMPLATE_PATH = path.join(__dirname, "../templates/app.module.ts.template");
 const APP_CONFIG_TEMPLATE_PATH = path.join(__dirname, "../templates/app.config.ts.template");
 const APP_COMPONENT_TEMPLATE_PATH = path.join(__dirname, "../templates/app.component.ts.template");
+const POSTCSSRC_FILE_PATH = path.join(__dirname, "../templates/postcssrc.json.template");
 
 const COMPONENT_STYLE_FILE_EXTENSION = "scss";
 const ROOT_MODULE_PATHS = ["grid-crm/grid-crm"];
@@ -221,12 +222,17 @@ export class SampleAssetsGenerator {
     private _getAdditionalFiles(config: Config): LiveEditingFile[] {
         let additionalFiles = new Array<LiveEditingFile>();
         for (let i = 0; i < config.additionalFiles.length; i++) {
-            let fileContent = fs.readFileSync(path.join(process.cwd(), config.additionalFiles[i]), "utf8");
-            config.additionalFiles[i] = config.additionalFiles[i].substring(
-                config.additionalFiles[i].indexOf(SAMPLE_SRC_FOLDER));
-            let file = new LiveEditingFile(config.additionalFiles[i], fileContent);
-            this._shortenComponentPath(config, file);
-            additionalFiles.push(file);
+            if (config.additionalFiles[i] === ".postcssrc.json") {
+                let postCssRcFile = fs.readFileSync(POSTCSSRC_FILE_PATH, "utf8");
+                additionalFiles.push(new LiveEditingFile(".postcssrc.json", postCssRcFile));
+            } else {
+                let fileContent = fs.readFileSync(path.join(process.cwd(), config.additionalFiles[i]), "utf8");
+                config.additionalFiles[i] = config.additionalFiles[i].substring(
+                    config.additionalFiles[i].indexOf(SAMPLE_SRC_FOLDER));
+                let file = new LiveEditingFile(config.additionalFiles[i], fileContent);
+                this._shortenComponentPath(config, file);
+                additionalFiles.push(file);
+            }
         }
 
         return additionalFiles;
@@ -496,7 +502,7 @@ export class SampleAssetsGenerator {
 
     private removeRedundantDepencenies(additionalDependencies) {
         const webContainerDeps =
-            ['igniteui-angular-charts', 'igniteui-angular-core', 'igniteui-angular-excel', 'igniteui-angular-gauges', 'igniteui-angular-maps',
+            ['igniteui-angular-charts', 'igniteui-angular-core', 'igniteui-angular-excel', 'igniteui-angular-gauges', 'igniteui-angular-maps', 'tailwindcss', '@tailwindcss/postcss',
                 'igniteui-angular-spreadsheet', 'igniteui-angular-spreadsheet-chart-adapter', '@juggle/resize-observer', '@microsoft/signalr', 'igniteui-dockmanager', 'igniteui-webcomponents']
         const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
         let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
