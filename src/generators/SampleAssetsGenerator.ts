@@ -18,6 +18,20 @@ const COMPONENT_STYLE_FILE_EXTENSION = "scss";
 const ROOT_MODULE_PATHS = ["grid-crm/grid-crm"];
 const COMPONENT_FILE_EXTENSIONS = ["ts", "html", COMPONENT_STYLE_FILE_EXTENSION];
 
+const WEB_CONTAINER_DEPS = [
+    'igniteui-angular-charts',
+    'igniteui-angular-core',
+    'igniteui-angular-excel',
+    'igniteui-angular-gauges',
+    'igniteui-angular-maps',
+    'igniteui-angular-spreadsheet',
+    'igniteui-angular-spreadsheet-chart-adapter',
+    '@juggle/resize-observer',
+    '@microsoft/signalr',
+    'igniteui-dockmanager',
+    'igniteui-webcomponents'
+];
+
 export class SampleAssetsGenerator {
     private _dependencyResolver: DependencyResolver;
     private _componentRoutes: Map<string, string>;
@@ -147,8 +161,10 @@ export class SampleAssetsGenerator {
         let dependencies = this._dependencyResolver.resolveSampleDependencies(
             config.dependenciesType, config.additionalDependencies);
 
+        const modifiedPackages = this.addCustomDependencies(config.additionalDependencies || [], dependencies);
+
         if (this.options.platform === 'angular') {
-            const packageJsonFile = this.removeRedundantDepencenies(JSON.stringify(dependencies));
+            const packageJsonFile = this.removeRedundantDependencies(JSON.stringify(dependencies), modifiedPackages);
             sampleFiles.push(new LiveEditingFile("package.json", packageJsonFile));
         }
 
@@ -494,15 +510,31 @@ export class SampleAssetsGenerator {
         return relativePath;
     }
 
-    private removeRedundantDepencenies(additionalDependencies) {
-        const webContainerDeps =
-            ['igniteui-angular-charts', 'igniteui-angular-core', 'igniteui-angular-excel', 'igniteui-angular-gauges', 'igniteui-angular-maps',
-                'igniteui-angular-spreadsheet', 'igniteui-angular-spreadsheet-chart-adapter', '@juggle/resize-observer', '@microsoft/signalr', 'igniteui-dockmanager', 'igniteui-webcomponents']
+    private addCustomDependencies(dependencies: string[], withVersions: object): string {
         const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
         let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
-        for (let i = 0; i < webContainerDeps.length; i++) {
-            if (!additionalDependencies.includes(webContainerDeps[i])) {
-                let expression = new RegExp('\\"' + webContainerDeps[i] + '\\": \\".*\\",', 'g')
+        let dependenciesString = "";
+        for (let i = 0; i < dependencies.length; i++) {
+            if (withVersions[dependencies[i]]) {
+                dependenciesString += `,\n    "${dependencies[i]}": "${withVersions[dependencies[i]]}"`;
+            } else {
+                dependenciesString += `,\n    "${dependencies[i]}": "*"`;
+            }
+        }
+        packageJsonFile = packageJsonFile.replace("{dependencies}", dependenciesString);
+        packageJsonFile = packageJsonFile.replace(/(\r?\n)\s*\1+/g, '');
+        return packageJsonFile;
+    }
+
+    private removeRedundantDependencies(additionalDependencies, modifiedPackages: string) {
+        let packageJsonFile = modifiedPackages;
+        if (!packageJsonFile) {
+            const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
+            packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
+        }
+        for (let i = 0; i < WEB_CONTAINER_DEPS.length; i++) {
+            if (!additionalDependencies.includes(WEB_CONTAINER_DEPS[i])) {
+                let expression = new RegExp('\\"' + WEB_CONTAINER_DEPS[i] + '\\": \\".*\\",', 'g')
                 packageJsonFile = packageJsonFile.replace(expression, "");
             }
         }
