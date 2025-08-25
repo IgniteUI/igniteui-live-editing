@@ -38,7 +38,7 @@
     "intl": "^1.2.5",
     "rxjs": "^7.8.1",
     "tslib": "^2.6.1",
-    "zone.js": "~0.15.0"
+    "zone.js": "~0.15.0"{dependencies}
   },
   "devDependencies": {
     "@angular/build": "^20.0.1",
