@@ -317,7 +317,7 @@ export class SampleAssetsGenerator {
                 }
             });
         }
-        if (appConfig.routesConfig?.router && appConfig.routesConfig?.routesImportPath) {
+        if (this._shouldConfigureRouting(config)) {
             importMap.set('@angular/router', ['provideRouter', 'withComponentInputBinding']);
             importMap.set(`${appConfig.routesConfig.routesImportPath}`, ['routes']);
         }
@@ -355,13 +355,18 @@ export class SampleAssetsGenerator {
                 formatted += `        ${provider}${i < providers.length - 1 ? ',\n' : ''}`;
             });
         }
-        if (config.appConfig.routesConfig?.router && config.appConfig.routesConfig?.routesImportPath) {
+        if (this._shouldConfigureRouting(config)) {
             if (formatted.length > 0) {
                 formatted += ',\n';
             }
             formatted += `        provideRouter(routes, withComponentInputBinding())`;
         }
         return formatted;
+    }
+
+    private _shouldConfigureRouting(config: Config): boolean {
+        const routesConfig = config?.appConfig?.routesConfig;
+        return !!(routesConfig?.router && routesConfig?.routesImportPath);
     }
 
     private _getAppModuleConfig(config: Config, configImports, configAdditionalImports?) {
