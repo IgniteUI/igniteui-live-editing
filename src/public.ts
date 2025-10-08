@@ -39,13 +39,12 @@ export class AppModuleConfig {
 export interface AppConfig {
     modules: ModuleProvider[];
     providers: Provider[];
-    router?: boolean;
+    routesConfig?: RoutesConfig;
     additionalAdjustments?: string[];
 }
 
 export class Config {
     public component: string;
-    public usesRouting: boolean;
     public additionalFiles: string[];
     public appModuleConfig?: AppModuleConfig;
     public appConfig: AppConfig;
@@ -106,3 +105,7 @@ export interface Provider {
     import: string
 }
 
+export interface RoutesConfig {
+    router?: boolean;
+    routesImportPath?: string;
+}
