@@ -7,7 +7,7 @@ import { DependencyResolver } from "./../services/DependencyResolver";
 import { LiveEditingFile, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER } from "./misc/LiveEditingFile";
 import { TsImportsService } from "../services/TsImportsService";
 import { componentPaths, appRouting } from "../services/TsRoutingPathService";
-import { IConfigGenerator, Config, ILiveEditingOptions } from "../public";
+import { IConfigGenerator, Config, ILiveEditingOptions, RoutesConfig } from "../public";
 import { SampleDefinitionFile } from "./misc/SampleDefinitionFile";
 
 const APP_MODULE_TEMPLATE_PATH = path.join(__dirname, "../templates/app.module.ts.template");
@@ -18,6 +18,22 @@ const POSTCSSRC_FILE_PATH = path.join(__dirname, "../templates/postcssrc.json.te
 const COMPONENT_STYLE_FILE_EXTENSION = "scss";
 const ROOT_MODULE_PATHS = ["grid-crm/grid-crm"];
 const COMPONENT_FILE_EXTENSIONS = ["ts", "html", COMPONENT_STYLE_FILE_EXTENSION];
+
+const WEB_CONTAINER_DEPS = [
+    'igniteui-angular-charts',
+    'igniteui-angular-core',
+    'igniteui-angular-excel',
+    'igniteui-angular-gauges',
+    'igniteui-angular-maps',
+    'igniteui-angular-spreadsheet',
+    'igniteui-angular-spreadsheet-chart-adapter',
+    '@juggle/resize-observer',
+    '@microsoft/signalr',
+    'igniteui-dockmanager',
+    'igniteui-webcomponents',
+    'tailwindcss',
+    '@tailwindcss/postcss',
+];
 
 export class SampleAssetsGenerator {
     private _dependencyResolver: DependencyResolver;
@@ -132,7 +148,7 @@ export class SampleAssetsGenerator {
         ));
         sampleFiles.push(new LiveEditingFile(
             SAMPLE_APP_FOLDER + "app.component.html",
-            this._getAppComponentHtml(componentTsContent, config.usesRouting)));
+            this._getAppComponentHtml(componentTsContent, config.appConfig.routesConfig)));
         sampleFiles.push(new LiveEditingFile(
             `${SAMPLE_APP_FOLDER}app.config.ts`,
             this._getAppConfig(config, configImports, configAdditionalImports),
@@ -148,8 +164,10 @@ export class SampleAssetsGenerator {
         let dependencies = this._dependencyResolver.resolveSampleDependencies(
             config.dependenciesType, config.additionalDependencies);
 
+        const modifiedPackages = this.addCustomDependencies(config.additionalDependencies || [], dependencies);
+
         if (this.options.platform === 'angular') {
-            const packageJsonFile = this.removeRedundantDepencenies(JSON.stringify(dependencies));
+            const packageJsonFile = this.removeRedundantDependencies(JSON.stringify(dependencies), modifiedPackages);
             sampleFiles.push(new LiveEditingFile("package.json", packageJsonFile));
         }
 
@@ -241,16 +259,19 @@ export class SampleAssetsGenerator {
     private _getAppComponentTs(config: Config, sampleFiles: LiveEditingFile[]) {
         let appComponentTemplate = fs.readFileSync(APP_COMPONENT_TEMPLATE_PATH, "utf8");
         const mainSampleTsPath = sampleFiles.filter(f => f.isMain && f.fileExtension === "ts")[0].path;
+        const importRouter = config.appConfig.routesConfig?.router ?? false;
         return appComponentTemplate
             .replace(/\{sampleAppComponent\}/g, config.component)
             .replace(/\{appImport\}/g, `.\/${mainSampleTsPath.substring(mainSampleTsPath.indexOf("app/") + 4)}`)
+            .replace(/\{routerOutlet\}/g, importRouter ? ", RouterOutlet" : "")
+            .replace(/\{routerOutletImport\}/g, importRouter ? "import { RouterOutlet } from '@angular/router';" : "")
             .replace(".ts", "");
     }
 
-    private _getAppComponentHtml(componentTsContent, usesRouting) {
+    private _getAppComponentHtml(componentTsContent, routesConfig?: RoutesConfig) {
         let selectorRegex = /selector:[\s]*["']([a-zA-Z0-9-]+)["']/g;
         let selectorComponent = selectorRegex.exec(componentTsContent)[1];
-        let appComponentHtml = usesRouting ? "<router-outlet></router-outlet>" :
+        let appComponentHtml = routesConfig?.router ? "<router-outlet></router-outlet>" :
             "<" + selectorComponent + "></" + selectorComponent + ">";
         return appComponentHtml;
     }
@@ -304,8 +325,9 @@ export class SampleAssetsGenerator {
                 }
             });
         }
-        if (appConfig.router) {
+        if (this._shouldConfigureRouting(config)) {
             importMap.set('@angular/router', ['provideRouter', 'withComponentInputBinding']);
+            importMap.set(`${appConfig.routesConfig.routesImportPath}`, ['routes']);
         }
         return importMap;
     }
@@ -341,13 +363,18 @@ export class SampleAssetsGenerator {
                 formatted += `        ${provider}${i < providers.length - 1 ? ',\n' : ''}`;
             });
         }
-        if (config.appConfig.router) {
+        if (this._shouldConfigureRouting(config)) {
             if (formatted.length > 0) {
                 formatted += ',\n';
             }
-            formatted += `        provideRouter([], withComponentInputBinding())`;
+            formatted += `        provideRouter(routes, withComponentInputBinding())`;
         }
         return formatted;
+    }
+
+    private _shouldConfigureRouting(config: Config): boolean {
+        const routesConfig = config?.appConfig?.routesConfig;
+        return !!(routesConfig?.router && routesConfig?.routesImportPath);
     }
 
     private _getAppModuleConfig(config: Config, configImports, configAdditionalImports?) {
@@ -500,15 +527,31 @@ export class SampleAssetsGenerator {
         return relativePath;
     }
 
-    private removeRedundantDepencenies(additionalDependencies) {
-        const webContainerDeps =
-            ['igniteui-angular-charts', 'igniteui-angular-core', 'igniteui-angular-excel', 'igniteui-angular-gauges', 'igniteui-angular-maps', 'tailwindcss', '@tailwindcss/postcss',
-                'igniteui-angular-spreadsheet', 'igniteui-angular-spreadsheet-chart-adapter', '@juggle/resize-observer', '@microsoft/signalr', 'igniteui-dockmanager', 'igniteui-webcomponents']
+    private addCustomDependencies(dependencies: string[], withVersions: object): string {
         const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
         let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
-        for (let i = 0; i < webContainerDeps.length; i++) {
-            if (!additionalDependencies.includes(webContainerDeps[i])) {
-                let expression = new RegExp('\\"' + webContainerDeps[i] + '\\": \\".*\\",', 'g')
+        let dependenciesString = "";
+        for (let i = 0; i < dependencies.length; i++) {
+            if (withVersions[dependencies[i]]) {
+                dependenciesString += `,\n    "${dependencies[i]}": "${withVersions[dependencies[i]]}"`;
+            } else {
+                dependenciesString += `,\n    "${dependencies[i]}": "*"`;
+            }
+        }
+        packageJsonFile = packageJsonFile.replace("{dependencies}", dependenciesString);
+        packageJsonFile = packageJsonFile.replace(/(\r?\n)\s*\1+/g, '');
+        return packageJsonFile;
+    }
+
+    private removeRedundantDependencies(additionalDependencies, modifiedPackages: string) {
+        let packageJsonFile = modifiedPackages;
+        if (!packageJsonFile) {
+            const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
+            packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
+        }
+        for (let i = 0; i < WEB_CONTAINER_DEPS.length; i++) {
+            if (!additionalDependencies.includes(WEB_CONTAINER_DEPS[i])) {
+                let expression = new RegExp('\\"' + WEB_CONTAINER_DEPS[i] + '\\": \\".*\\",', 'g')
                 packageJsonFile = packageJsonFile.replace(expression, "");
             }
         }
