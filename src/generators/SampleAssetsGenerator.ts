@@ -164,7 +164,7 @@ export class SampleAssetsGenerator {
         const modifiedPackages = this.addCustomDependencies(config.additionalDependencies || [], dependencies);
 
         if (this.options.platform === 'angular') {
-            const packageJsonFile = this.removeRedundantDependencies(JSON.stringify(dependencies), modifiedPackages);
+            const packageJsonFile = this.removeRedundantDependencies(config.additionalDependencies || [], modifiedPackages);
             sampleFiles.push(new LiveEditingFile("package.json", packageJsonFile));
         }
 
@@ -523,10 +523,16 @@ export class SampleAssetsGenerator {
         const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
         let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
         let dependenciesString = "";
+
+        // Update all existing dependencies in the template with resolved versions
+        for (const pkg in withVersions) {
+            const versionPattern = new RegExp(`"${pkg}": "[^"]*"`, 'g');
+            const replacement = `"${pkg}": "${withVersions[pkg]}"`;
+            packageJsonFile = packageJsonFile.replace(versionPattern, replacement);
+        }
+
         for (let i = 0; i < dependencies.length; i++) {
-            if (withVersions[dependencies[i]]) {
-                dependenciesString += `,\n    "${dependencies[i]}": "${withVersions[dependencies[i]]}"`;
-            } else {
+            if (!withVersions[dependencies[i]]) {
                 dependenciesString += `,\n    "${dependencies[i]}": "*"`;
             }
         }
