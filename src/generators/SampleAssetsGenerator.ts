@@ -526,7 +526,8 @@ export class SampleAssetsGenerator {
 
         // Update all existing dependencies in the template with resolved versions
         for (const pkg in withVersions) {
-            const versionPattern = new RegExp(`"${pkg}": "[^"]*"`, 'g');
+            const escapedPkg = pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const versionPattern = new RegExp(`"${escapedPkg}": "[^"]*"`, 'g');
             const replacement = `"${pkg}": "${withVersions[pkg]}"`;
             packageJsonFile = packageJsonFile.replace(versionPattern, replacement);
         }
