@@ -524,17 +524,22 @@ export class SampleAssetsGenerator {
         let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
         let dependenciesString = "";
 
-        // Update all existing dependencies in the template with resolved versions
+        // Update existing packages or add new ones with resolved versions
         for (const pkg in withVersions) {
             const escapedPkg = pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const versionPattern = new RegExp(`"${escapedPkg}": "[^"]*"`, 'g');
             const replacement = `"${pkg}": "${withVersions[pkg]}"`;
-            packageJsonFile = packageJsonFile.replace(versionPattern, replacement);
+            
+            if (packageJsonFile.match(versionPattern)) {
+                packageJsonFile = packageJsonFile.replace(versionPattern, replacement);
+            } else {
+                dependenciesString += `,\n    ${replacement}`;
+            }
         }
-
-        for (let i = 0; i < dependencies.length; i++) {
-            if (!withVersions[dependencies[i]]) {
-                dependenciesString += `,\n    "${dependencies[i]}": "*"`;
+        // Add packages without resolved versions
+        for (const dep of dependencies) {
+            if (!withVersions[dep]) {
+                dependenciesString += `,\n    "${dep}": "*"`;
             }
         }
         packageJsonFile = packageJsonFile.replace("{dependencies}", dependenciesString);
