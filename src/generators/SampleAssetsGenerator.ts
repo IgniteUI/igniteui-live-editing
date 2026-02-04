@@ -164,7 +164,9 @@ export class SampleAssetsGenerator {
         const modifiedPackages = this.addCustomDependencies(config.additionalDependencies || [], dependencies);
 
         if (this.options.platform === 'angular') {
-            const packageJsonFile = this.removeRedundantDependencies(config.additionalDependencies || [], modifiedPackages);
+            const packageJsonString = this.removeRedundantDependencies(config.additionalDependencies || [], modifiedPackages);
+            const packageJson = JSON.parse(packageJsonString);
+            const packageJsonFile = JSON.stringify(packageJson, null, 2);
             sampleFiles.push(new LiveEditingFile("package.json", packageJsonFile));
         }
 
