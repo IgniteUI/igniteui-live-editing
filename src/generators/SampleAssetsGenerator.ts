@@ -164,7 +164,9 @@ export class SampleAssetsGenerator {
         const modifiedPackages = this.addCustomDependencies(config.additionalDependencies || [], dependencies);
 
         if (this.options.platform === 'angular') {
-            const packageJsonFile = this.removeRedundantDependencies(JSON.stringify(dependencies), modifiedPackages);
+            const packageJsonString = this.removeRedundantDependencies(config.additionalDependencies || [], modifiedPackages);
+            const packageJson = JSON.parse(packageJsonString);
+            const packageJsonFile = JSON.stringify(packageJson, null, 2);
             sampleFiles.push(new LiveEditingFile("package.json", packageJsonFile));
         }
 
@@ -523,11 +525,23 @@ export class SampleAssetsGenerator {
         const PACKAGE_JSON_FILE_PATH = path.join(__dirname, "../templates/package.json.template");
         let packageJsonFile = fs.readFileSync(PACKAGE_JSON_FILE_PATH, "utf8");
         let dependenciesString = "";
-        for (let i = 0; i < dependencies.length; i++) {
-            if (withVersions[dependencies[i]]) {
-                dependenciesString += `,\n    "${dependencies[i]}": "${withVersions[dependencies[i]]}"`;
+
+        // Update existing packages or add new ones with resolved versions
+        for (const pkg in withVersions) {
+            const escapedPkg = pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const versionPattern = new RegExp(`"${escapedPkg}": "[^"]*"`, 'g');
+            const replacement = `"${pkg}": "${withVersions[pkg]}"`;
+            
+            if (packageJsonFile.match(versionPattern)) {
+                packageJsonFile = packageJsonFile.replace(versionPattern, replacement);
             } else {
-                dependenciesString += `,\n    "${dependencies[i]}": "*"`;
+                dependenciesString += `,\n    ${replacement}`;
+            }
+        }
+        // Add packages without resolved versions
+        for (const dep of dependencies) {
+            if (!withVersions[dep]) {
+                dependenciesString += `,\n    "${dep}": "*"`;
             }
         }
         packageJsonFile = packageJsonFile.replace("{dependencies}", dependenciesString);
