@@ -5,17 +5,24 @@ name: Npm.js deploy
 
 on:
   release:
-    types: [created]    
+    types: [created]
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   npm-publish:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22
+        cache: 'npm'
         registry-url: 'https://registry.npmjs.org'
+    - name: Update NPM
+      run: npm install -g npm@latest
     - run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
     - run: echo ${VERSION}
     - run: npm ci
@@ -28,5 +35,3 @@ jobs:
       working-directory: lib
     - run: npm publish --tag ${NPM_TAG}
       working-directory: lib
-      env:
-          NODE_AUTH_TOKEN: ${{secrets.INFRAGISTICS_NPM_TOKEN}}
