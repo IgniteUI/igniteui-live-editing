@@ -38,6 +38,7 @@
     "intl": "^1.2.5",
     "rxjs": "^7.8.2",
     "tailwindcss": "^4.1.10",
+    "@tailwindcss/postcss": "^4.1.10",
     "tslib": "^2.6.1",
     "zone.js": "~0.15.0"{dependencies}
   },
