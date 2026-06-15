@@ -141,7 +141,7 @@ export class SampleAssetsGenerator {
         this._shortenComponentPath(config, appModuleFile);
         sampleFiles.push(appModuleFile);
         */
-        this._modifyImports(sampleFiles.filter(x => x.fileExtension === 'ts' && x.isMain), additionalFiles);
+        this._modifyImports(sampleFiles.filter(x => x.fileExtension === 'ts' || x.path.endsWith('.ts')), additionalFiles);
         sampleFiles.push(new LiveEditingFile(
             SAMPLE_APP_FOLDER + "app.component.ts",
             this._getAppComponentTs(config, sampleFiles)
@@ -316,14 +316,11 @@ export class SampleAssetsGenerator {
         }
         if (appConfig.providers && appConfig.providers.length) {
             appConfig.providers.forEach(provider => {
+                const importName = provider.provider.replace(/\(.*\)$/g, "");
                 if (importMap.has(provider.import)) {
-                    importMap.get(provider.import).push(
-                        provider.provider.replace(/\(/g, "").replace(/\)/g, "")
-                    );
+                    importMap.get(provider.import).push(importName);
                 } else {
-                    importMap.set(provider.import, [
-                        provider.provider.replace(/\(/g, "").replace(/\)/g, "")
-                    ]);
+                    importMap.set(provider.import, [importName]);
                 }
             });
         }
