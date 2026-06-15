@@ -25,12 +25,14 @@ const SHARED_DEV_DEPENDENCIES = {
 const DEPENDENCIES_WITH_FIXED_VERSION = {};
 
 const SHARED_DEPENDENCIES = [
+    "@angular/cdk",
     "@angular/common",
     "@angular/compiler",
     "@angular/core",
     "@angular/forms", // included in app.module.ts.template
     "@angular/platform-browser",
     "@angular/platform-browser-dynamic",
+    "@angular/router",
     "rxjs",
     "zone.js",
 

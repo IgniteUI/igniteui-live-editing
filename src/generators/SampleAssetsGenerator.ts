@@ -2,7 +2,7 @@
 // tslint:disable:prefer-const
 import * as fs from "fs";
 import * as path from "path";
-import { DependencyResolver } from "./../services/DependencyResolver";
+import { DependencyResolver, DevDependencyResolver } from "./../services/DependencyResolver";
 
 import { LiveEditingFile, SAMPLE_APP_FOLDER, SAMPLE_SRC_FOLDER } from "./misc/LiveEditingFile";
 import { TsImportsService } from "../services/TsImportsService";
@@ -546,6 +546,14 @@ export class SampleAssetsGenerator {
                 dependenciesString += `,\n    ${replacement}`;
             }
         }
+        // Update devDependencies in the template from the project's devDependencies
+        const devDeps = new DevDependencyResolver().devDependencies;
+        for (const pkg in devDeps) {
+            const escapedPkg = pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const versionPattern = new RegExp(`"${escapedPkg}": "[^"]*"`, 'g');
+            packageJsonFile = packageJsonFile.replace(versionPattern, `"${pkg}": "${devDeps[pkg]}"`);
+        }
+
         // Add packages without resolved versions
         for (const dep of dependencies) {
             if (!withVersions[dep]) {
