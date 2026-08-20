@@ -90,7 +90,6 @@ export class GridConfigGenerator implements IConfigGenerator {
 ### Shared File
 The engine creates a `shared.json` file which holds all of the common files path and content, used in every sample application. These files are:
 * index.html
-* polyfills.ts
 * styles.scss
 * .angular-cli.json
 * main.ts

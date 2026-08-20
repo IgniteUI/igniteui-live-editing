@@ -34,30 +34,17 @@ const SHARED_DEPENDENCIES = [
     "@angular/platform-browser-dynamic",
     "@angular/router",
     "rxjs",
-    "zone.js",
 
     "igniteui-angular", // needed for all samples because of styles.scss
-    "jszip", // dependency for igniteui-angular
-
-    // For polyfills
-    "classlist.js",
-    "core-js",
-    "hammerjs",
-    "@types/hammerjs",
-    "intl",
-    "web-animations-js"
+    "jszip" // dependency for igniteui-angular
 ];
 
 const DEFAULT_DEPENDENCIES = [
     "@angular/animations",
     "@angular/forms",
     "@angular/router",
-    "classlist.js",
-    "hammerjs",
-    "web-animations-js",
     "jszip",
     "immediate",
-    "intl",
     "tslib",
     "sass"
 ];
