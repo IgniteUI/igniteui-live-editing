@@ -124,7 +124,7 @@ export class DevDependencyResolver {
         for (let key in this._devDependencies) {
             if (key in SHARED_DEV_DEPENDENCIES) {
                     let version = this._devDependencies[key];
-                    result[key] = version.replace("~", "").replace("^", "");
+                    result[key] = version.replace("~", "");
             }
         }
 
