@@ -34,7 +34,6 @@ export class SharedAssetsGenerator {
 
     private _generateSharedAssets(args: SharedAssetsGeneratorArgs) {
         const INDEX_FILE_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/index.html");
-        const POLYPFILLS_FILE_PATH = path.join(process.cwd(), (this.options.projectDir ?? ""), "src/polyfills.ts");
 
         let indexFile = fs.readFileSync(INDEX_FILE_PATH, "utf8");
         let angularJsonFile = fs.readFileSync(args.angularJsonFilePath, "utf8");
@@ -42,7 +41,6 @@ export class SharedAssetsGenerator {
         let environmentFile = fs.readFileSync(ENVIRONMENT_FILE_PATH, "utf8");
         let environmentProdFile = fs.readFileSync(ENVIRONMENT_PROD_FILE_PATH, "utf8");
         let files = new Array<LiveEditingFile>();
-        let polyfillsFile = fs.readFileSync(POLYPFILLS_FILE_PATH, "utf8");
         let tsConfigFile = fs.readFileSync(TS_CONFIG_FILE_PATH, "utf8");
         let tsConfigAppFile = fs.readFileSync(TS_APP_CONFIG_FILE_PATH, "utf8");
         let stackblitzConfigFile = fs.readFileSync(STACKBLITZ_CONFIG_FILE_PATH, "utf8");
@@ -65,7 +63,6 @@ export class SharedAssetsGenerator {
             files.push(new LiveEditingFile(SAMPLE_ENVIRONMENTS_FOLDER + "environment.prod.ts", environmentProdFile));
         }
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "index.html", indexFile));
-        files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "polyfills.ts", polyfillsFile));
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + args.stylesFileName, args.stylesFileContent));
         files.push(new LiveEditingFile("angular.json", angularJsonFile));
         files.push(new LiveEditingFile(SAMPLE_SRC_FOLDER + "main.ts", mainTsFile));
